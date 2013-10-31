@@ -27,8 +27,13 @@ type uGraph struct {
 }
 
 // uNode implements graph.Node, also fmt.Stringer
-func (n *uNode) String() string     { return n.name }
-func (n *uNode) D() *graph.Dijkstra { return n.d }
+func (n *uNode) String() string { return n.name }
+func (n *uNode) D() *graph.Dijkstra {
+	if n.d == nil {
+		n.d = &graph.Dijkstra{}
+	}
+	return n.d
+}
 func (n *uNode) Neighbors(nbs []graph.Neighbor) []graph.Neighbor {
 	for _, e := range n.eds {
 		nb := graph.Neighbor{e, e.n1}
@@ -46,14 +51,15 @@ func (e uEdge) Distance() float64 { return e.dist }
 
 // uGraph implements graph.Graph
 func (g *uGraph) ResetDijkstra() {
+	if !g.searched {
+		g.searched = true
+		return
+	}
 	for _, n := range g.nds {
-		if !g.searched {
-			n.d = &graph.Dijkstra{}
-		} else {
-			n.D().Reset()
+		if n.d != nil {
+			n.d.Reset()
 		}
 	}
-	g.searched = true
 }
 
 // uEdgeData struct for simple specification of example data
