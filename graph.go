@@ -109,10 +109,11 @@ func DijkstraShortestPath(g Graph, start, end Node) ([]Neighbor, float64) {
 	cd := start.D()
 	cd.tp = &tentPath{n: 1}
 	var unvis ndList // heap
-	var nb []Neighbor
+	var nbs []Neighbor
 	for {
 		// WP step 3: update tentative distances to neighbors
-		for _, nb := range current.Neighbors(nb[:0]) {
+		nbs := current.Neighbors(nbs[:0])
+		for _, nb := range nbs {
 			if nd := nb.D(); !nd.done {
 				dist := cd.tp.dist + nb.Distance()
 				tent := nd.tp != nil
