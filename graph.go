@@ -110,17 +110,19 @@ func DijkstraShortestPath(g Graph, start, end Node) ([]Neighbor, float64) {
 		for _, nb := range current.Neighbors(nb[:0]) {
 			if nd := nb.D(); !nd.done {
 				d := cd.tent + nb.Distance()
-				if nd.n > 0 {
-					if nd.tent <= d {
-						continue
-					}
-					heap.Remove(&unvis, nd.rx)
+				heaped := nd.n > 0
+				if heaped && nd.tent <= d {
+					continue
 				}
 				nd.tent = d
 				nd.prevNode = current
 				nd.prevEdge = nb.Edge
 				nd.n = cd.n + 1
-				heap.Push(&unvis, nb.Node)
+				if heaped {
+					heap.Fix(&unvis, nd.rx)
+				} else {
+					heap.Push(&unvis, nb.Node)
+				}
 			}
 		}
 		// WP step 4: mark current node visited, record path and distance
