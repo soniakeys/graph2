@@ -95,6 +95,8 @@ type Graph interface {
 // from the start node, the returned neighbor list will be nil.
 func DijkstraShortestPath(g Graph, start, end Node) ([]Neighbor, float64) {
 	// WP steps 1 and 2.
+	// WP references are to the algorithm description on Wikepedia,
+	// http://en.wikipedia.org/wiki/Dijkstra%27s_algorithm#Algorithm
 	g.ResetDijkstra()
 	current := start
 	cd := current.D()
