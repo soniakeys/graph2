@@ -10,30 +10,18 @@ import (
 // from the node with the handy Neighbor type from the graph package.
 type node struct {
 	nbs  []graph.Neighbor // directed edges as Neighbors
-	d    graph.Dijkstra   // for D method of graph.Node interface
 	name string           // example application specific data
 }
 
 // edge is a simple number representing an edge length/distance/weight.
 type edge float64
 
-// nodeMap is a collection of nodes representing a graph.
-type nodeMap map[string]*node
-
 // node implements graph.Node, also fmt.Stringer
-func (n *node) String() string                              { return n.name }
-func (n *node) D() *graph.Dijkstra                          { return &n.d }
 func (n *node) Neighbors([]graph.Neighbor) []graph.Neighbor { return n.nbs }
+func (n *node) String() string                              { return n.name }
 
 // edge implements graph.Edge
 func (e edge) Distance() float64 { return float64(e) }
-
-// nodeMap implements graph.Graph
-func (m nodeMap) ResetDijkstra() {
-	for _, n := range m {
-		n.D().Reset()
-	}
-}
 
 // edgeData struct for simple specification of example data
 type edgeData struct {
@@ -59,8 +47,8 @@ var (
 )
 
 // linkGraph constructs a linked representation of example data.
-func linkGraph(g []edgeData, start, end string) (allNodes nodeMap, startNode, endNode *node) {
-	all := nodeMap{}
+func linkGraph(g []edgeData, start, end string) (allNodes int, startNode, endNode *node) {
+	all := map[string]*node{}
 	// one pass over data to collect nodes
 	for _, e := range g {
 		if all[e.v1] == nil {
@@ -75,7 +63,7 @@ func linkGraph(g []edgeData, start, end string) (allNodes nodeMap, startNode, en
 		n1 := all[ge.v1]
 		n1.nbs = append(n1.nbs, graph.Neighbor{edge(ge.l), all[ge.v2]})
 	}
-	return all, all[start], all[end]
+	return len(all), all[start], all[end]
 }
 
 func ExampleDijkstraShortestPath_directed() {
@@ -84,9 +72,9 @@ func ExampleDijkstraShortestPath_directed() {
 		linkGraph(exampleEdges, exampleStart, exampleEnd)
 	// echo initial conditions
 	fmt.Printf("Directed graph with %d nodes, %d edges\n",
-		len(allNodes), len(exampleEdges))
+		allNodes, len(exampleEdges))
 	// run Dijkstra's shortest path algorithm
-	p, l := graph.DijkstraShortestPath(allNodes, startNode, endNode)
+	p, l := graph.DijkstraShortestPath(startNode, endNode)
 	if p == nil {
 		fmt.Println("No path from start node to end node")
 		return

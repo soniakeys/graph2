@@ -8,9 +8,8 @@ import (
 
 // uNode represents a node in an undirected graph.
 type uNode struct {
-	eds  []*uEdge        // list of neighboring edges
-	d    *graph.Dijkstra // for D method of graph.Node interface
-	name string          // example application specific data
+	eds  []*uEdge // list of neighboring edges
+	name string   // example application specific data
 }
 
 // uEdge represents an undirected edge.
@@ -20,20 +19,7 @@ type uEdge struct {
 	// more application specific data could go here
 }
 
-// uGraph represents an undirected graph.
-type uGraph struct {
-	nds      []*uNode // list of all nodes in the graph
-	searched bool     // dirty bit directs reset
-}
-
 // uNode implements graph.Node, also fmt.Stringer
-func (n *uNode) String() string { return n.name }
-func (n *uNode) D() *graph.Dijkstra {
-	if n.d == nil {
-		n.d = &graph.Dijkstra{}
-	}
-	return n.d
-}
 func (n *uNode) Neighbors(nbs []graph.Neighbor) []graph.Neighbor {
 	for _, e := range n.eds {
 		nb := graph.Neighbor{e, e.n1}
@@ -44,23 +30,11 @@ func (n *uNode) Neighbors(nbs []graph.Neighbor) []graph.Neighbor {
 	}
 	return nbs
 }
+func (n *uNode) String() string { return n.name }
 
 // uEdge implements graph.Edge, also fmt.Stringer
 func (e uEdge) String() string    { return fmt.Sprint(e.dist) }
 func (e uEdge) Distance() float64 { return e.dist }
-
-// uGraph implements graph.Graph
-func (g *uGraph) ResetDijkstra() {
-	if !g.searched {
-		g.searched = true
-		return
-	}
-	for _, n := range g.nds {
-		if n.d != nil {
-			n.d.Reset()
-		}
-	}
-}
 
 // uEdgeData struct for simple specification of example data
 type uEdgeData struct {
@@ -87,30 +61,30 @@ var (
 )
 
 // linkUGraph constructs a linked representation of example data.
-func linkUGraph(nd []string, ed []uEdgeData, start, end string) (allNodes *uGraph, startUNode, endUNode *uNode) {
-	all := &uGraph{nds: make([]*uNode, len(nd))}
+func linkUGraph(nd []string, ed []uEdgeData, start, end string) (startUNode, endUNode *uNode) {
+	all := make([]*uNode, len(nd))
 	// construct nodes
 	for i, n := range nd {
-		all.nds[i] = &uNode{name: n}
+		all[i] = &uNode{name: n}
 	}
 	// link neighbors
 	for _, ge := range ed {
-		n1 := all.nds[ge.v1[0]-'a']
-		n2 := all.nds[ge.v2[0]-'a']
+		n1 := all[ge.v1[0]-'a']
+		n2 := all[ge.v2[0]-'a']
 		e := &uEdge{n1, n2, ge.l}
 		n1.eds = append(n1.eds, e)
 		n2.eds = append(n2.eds, e)
 	}
-	return all, all.nds[start[0]-'a'], all.nds[end[0]-'a']
+	return all[start[0]-'a'], all[end[0]-'a']
 }
 
 func ExampleDijkstraShortestPath_undirected() {
 	// construct linked representation of example data
-	allNodes, startNode, endNode := linkUGraph(nd, ed, uStart, uEnd)
+	startNode, endNode := linkUGraph(nd, ed, uStart, uEnd)
 	// echo initial conditions
 	fmt.Printf("Undirected graph with %d nodes, %d edges\n", len(nd), len(ed))
 	// run Dijkstra's shortest path algorithm
-	p, l := graph.DijkstraShortestPath(allNodes, startNode, endNode)
+	p, l := graph.DijkstraShortestPath(startNode, endNode)
 	if p == nil {
 		fmt.Println("No path from start node to end node")
 		return

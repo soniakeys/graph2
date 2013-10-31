@@ -30,9 +30,6 @@ type Node interface {
 	// length.  Implementations can append to this slice, reusing the
 	// existing capacity and minimizing garbage.
 	Neighbors([]Neighbor) []Neighbor
-	// D must return a pointer to a Dijkstra struct that is assoiated with
-	// the node.  Each node must have its own Dijkstra struct.
-	D() *Dijkstra
 }
 
 // Edge returns data on an edge.  The only data needed is the edge distance
@@ -50,32 +47,15 @@ type Neighbor struct {
 	Node
 }
 
-// Dijkstra holds data needed internally by the package implementation of
+// dijkstra holds data needed internally by the package implementation of
 // Dijkstra's algorithm.  Implementations of Node need to create one of
 // these structs for each node and maintain the struct associated with the
 // node.
-type Dijkstra struct {
+type dijkstra struct {
 	tp       *tentPath
 	prevNode Node // path back to start
 	prevEdge Edge // edge from prevNode to the node of this struct
 	done     bool // true when tent and prev represent shortest path
-}
-
-// Reset prepares a Dijkstra struct for a shortest path search.  It should
-// be called in the implementation of Graph.ResetDijkstra.
-func (d *Dijkstra) Reset() {
-	d.tp = nil
-	d.done = false
-}
-
-// Graph represents all nodes in a graph.  The only method needed,
-// ResetDijkstra, is called by DijkstraShortestPath as initialization.
-// The implementation of ResetDijkstra must iterate over all nodes in the
-// graph and call Reset() on the Dijkstra struct for each node.  There are
-// no constraints on graph representation except that this function should
-// have an efficient way of iterating over all nodes.
-type Graph interface {
-	ResetDijkstra()
 }
 
 type tentPath struct {
@@ -84,7 +64,10 @@ type tentPath struct {
 	rx   int     // heap.Remove index
 }
 
-type ndList []Node
+type search struct {
+	n []Node // heap
+	d map[Node]dijkstra
+}
 
 // DijkstraShortestPath finds the shortest path between two nodes.
 //
@@ -92,29 +75,27 @@ type ndList []Node
 // undirected graph.  The path length minimized is the sum of edge lengths
 // in the path, which must be non-negative.
 //
-// Graph, Node, and Edge must be implemented as described in this package
-// documentation. Argument g must be a properly connected graph, start and
-// end must be nodes in g.  The found shortest path is returned as a Neighbor
+// Node and Edge must be implemented as described in this package
+// documentation.  Arguments start and end must be nodes in a properly
+// connected graph.  The found shortest path is returned as a Neighbor
 // slice.  The first element of this slice will be the start node.  (The edge
 // member will be nil, as there is no edge that needs be identified going to
 // the start node.)  Remaining elements give the found path of edges and nodes.
 // Also returned is the total path length.  If the end node cannot be reached
 // from the start node, the returned neighbor list will be nil.
-func DijkstraShortestPath(g Graph, start, end Node) ([]Neighbor, float64) {
+func DijkstraShortestPath(start, end Node) ([]Neighbor, float64) {
 	// WP steps 1 and 2.
 	// WP references are to the algorithm description on Wikepedia,
 	// http://en.wikipedia.org/wiki/Dijkstra%27s_algorithm#Algorithm
-	g.ResetDijkstra()
 	current := start
-	cd := start.D()
-	cd.tp = &tentPath{n: 1}
-	var unvis ndList // heap
+	cd := dijkstra{tp: &tentPath{n: 1}}
+	s := &search{d: map[Node]dijkstra{current: cd}}
 	var nbs []Neighbor
 	for {
 		// WP step 3: update tentative distances to neighbors
-		nbs := current.Neighbors(nbs[:0])
+		nbs = current.Neighbors(nbs[:0])
 		for _, nb := range nbs {
-			if nd := nb.D(); !nd.done {
+			if nd := s.d[nb.Node]; !nd.done {
 				dist := cd.tp.dist + nb.Distance()
 				tent := nd.tp != nil
 				if tent && nd.tp.dist <= dist {
@@ -125,12 +106,14 @@ func DijkstraShortestPath(g Graph, start, end Node) ([]Neighbor, float64) {
 				if tent {
 					nd.tp.dist = dist
 					nd.tp.n = cd.tp.n + 1
-					heap.Fix(&unvis, nd.tp.rx)
+					s.d[nb.Node] = nd
+					heap.Fix(s, nd.tp.rx)
 				} else {
 					nd.tp = &tentPath{
 						dist: dist,
 						n:    cd.tp.n + 1}
-					heap.Push(&unvis, nb.Node)
+					s.d[nb.Node] = nd
+					heap.Push(s, nb.Node)
 				}
 			}
 		}
@@ -145,45 +128,44 @@ func DijkstraShortestPath(g Graph, start, end Node) ([]Neighbor, float64) {
 			path := make([]Neighbor, i)
 			for n := current; n != nil; {
 				i--
-				d := n.D()
-				path[i] = Neighbor{d.prevEdge, n}
-				n = d.prevNode
+				nd := s.d[n]
+				path[i] = Neighbor{nd.prevEdge, n}
+				n = nd.prevNode
 			}
 			return path, distance
 		}
-		if len(unvis) == 0 {
+		if len(s.n) == 0 {
 			break // WP step 5 (case of no more reachable nodes)
 		}
 		cd.tp = nil
 		// WP step 6: new current is node with smallest tentative distance
-		current = heap.Pop(&unvis).(Node)
-		cd = current.D()
+		current = heap.Pop(s).(Node)
+		cd = s.d[current]
 	}
 	return nil, 0
 }
 
-// tent implements container/heap
-func (n ndList) Len() int { return len(n) }
-func (n ndList) Less(i, j int) bool {
-	return n[i].D().tp.dist < n[j].D().tp.dist
+// search implements container/heap
+func (s search) Len() int { return len(s.n) }
+func (s search) Less(i, j int) bool {
+	return s.d[s.n[i]].tp.dist < s.d[s.n[j]].tp.dist
 }
-func (n ndList) Swap(i, j int) {
-	n[i], n[j] = n[j], n[i]
-	n[i].D().tp.rx = i
-	n[j].D().tp.rx = j
+func (s search) Swap(i, j int) {
+	s.n[i], s.n[j] = s.n[j], s.n[i]
+	s.d[s.n[i]].tp.rx = i
+	s.d[s.n[j]].tp.rx = j
 }
-func (n *ndList) Push(x interface{}) {
+func (s *search) Push(x interface{}) {
 	nd := x.(Node)
-	nd.D().tp.rx = len(*n)
-	*n = append(*n, nd)
+	s.d[nd].tp.rx = len(s.n)
+	s.n = append(s.n, nd)
 }
-func (n *ndList) Pop() interface{} {
-	s := *n
-	if len(s) == 0 {
+func (s *search) Pop() interface{} {
+	if len(s.n) == 0 {
 		return nil
 	}
-	last := len(s) - 1
-	r := s[last]
-	*n = s[:last]
+	last := len(s.n) - 1
+	r := s.n[last]
+	s.n = s.n[:last]
 	return r
 }
