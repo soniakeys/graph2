@@ -55,18 +55,16 @@ type Neighbor struct {
 // these structs for each node and maintain the struct associated with the
 // node.
 type Dijkstra struct {
-	tent     float64 // tentative distance
-	prevNode Node    // path back to start
-	prevEdge Edge    // edge from prevNode to the node of this struct
-	n        int     // number of nodes in path
-	done     bool    // true when tent and prev represent shortest path
-	rx       int     // heap.Remove index
+	tp       *tentPath
+	prevNode Node // path back to start
+	prevEdge Edge // edge from prevNode to the node of this struct
+	done     bool // true when tent and prev represent shortest path
 }
 
 // Reset prepares a Dijkstra struct for a shortest path search.  It should
 // be called in the implementation of Graph.ResetDijkstra.
 func (d *Dijkstra) Reset() {
-	d.n = 0
+	d.tp = nil
 	d.done = false
 }
 
@@ -79,6 +77,14 @@ func (d *Dijkstra) Reset() {
 type Graph interface {
 	ResetDijkstra()
 }
+
+type tentPath struct {
+	dist float64 // tentative path distance
+	n    int     // number of nodes in path
+	rx   int     // heap.Remove index
+}
+
+type ndList []Node
 
 // DijkstraShortestPath finds the shortest path between two nodes.
 //
@@ -100,27 +106,29 @@ func DijkstraShortestPath(g Graph, start, end Node) ([]Neighbor, float64) {
 	// http://en.wikipedia.org/wiki/Dijkstra%27s_algorithm#Algorithm
 	g.ResetDijkstra()
 	current := start
-	cd := current.D()
-	cd.n = 1
-	cd.tent = 0
+	cd := start.D()
+	cd.tp = &tentPath{n: 1}
 	var unvis ndList // heap
 	var nb []Neighbor
 	for {
 		// WP step 3: update tentative distances to neighbors
 		for _, nb := range current.Neighbors(nb[:0]) {
 			if nd := nb.D(); !nd.done {
-				d := cd.tent + nb.Distance()
-				heaped := nd.n > 0
-				if heaped && nd.tent <= d {
+				dist := cd.tp.dist + nb.Distance()
+				tent := nd.tp != nil
+				if tent && nd.tp.dist <= dist {
 					continue
 				}
-				nd.tent = d
 				nd.prevNode = current
 				nd.prevEdge = nb.Edge
-				nd.n = cd.n + 1
-				if heaped {
-					heap.Fix(&unvis, nd.rx)
+				if tent {
+					nd.tp.dist = dist
+					nd.tp.n = cd.tp.n + 1
+					heap.Fix(&unvis, nd.tp.rx)
 				} else {
+					nd.tp = &tentPath{
+						dist: dist,
+						n:    cd.tp.n + 1}
 					heap.Push(&unvis, nb.Node)
 				}
 			}
@@ -130,9 +138,9 @@ func DijkstraShortestPath(g Graph, start, end Node) ([]Neighbor, float64) {
 		if current == end {
 			// WP step 5 (case of end node reached)
 			// record path and distance for return value
-			distance := cd.tent
+			distance := cd.tp.dist
 			// recover path by tracing prev links
-			i := cd.n
+			i := cd.tp.n
 			path := make([]Neighbor, i)
 			for n := current; n != nil; {
 				i--
@@ -145,6 +153,7 @@ func DijkstraShortestPath(g Graph, start, end Node) ([]Neighbor, float64) {
 		if len(unvis) == 0 {
 			break // WP step 5 (case of no more reachable nodes)
 		}
+		cd.tp = nil
 		// WP step 6: new current is node with smallest tentative distance
 		current = heap.Pop(&unvis).(Node)
 		cd = current.D()
@@ -152,19 +161,19 @@ func DijkstraShortestPath(g Graph, start, end Node) ([]Neighbor, float64) {
 	return nil, 0
 }
 
-// ndList implements container/heap
-type ndList []Node
-
-func (n ndList) Len() int           { return len(n) }
-func (n ndList) Less(i, j int) bool { return n[i].D().tent < n[j].D().tent }
+// tent implements container/heap
+func (n ndList) Len() int { return len(n) }
+func (n ndList) Less(i, j int) bool {
+	return n[i].D().tp.dist < n[j].D().tp.dist
+}
 func (n ndList) Swap(i, j int) {
 	n[i], n[j] = n[j], n[i]
-	n[i].D().rx = i
-	n[j].D().rx = j
+	n[i].D().tp.rx = i
+	n[j].D().tp.rx = j
 }
 func (n *ndList) Push(x interface{}) {
 	nd := x.(Node)
-	nd.D().rx = len(*n)
+	nd.D().tp.rx = len(*n)
 	*n = append(*n, nd)
 }
 func (n *ndList) Pop() interface{} {
