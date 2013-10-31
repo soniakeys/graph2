@@ -55,11 +55,12 @@ type Neighbor struct {
 // these structs for each node and maintain the struct associated with the
 // node.
 type Dijkstra struct {
-	tent float64  // tentative distance
-	prev Neighbor // path back to start
-	n    int      // number of nodes in path
-	done bool     // true when tent and prev represent shortest path
-	rx   int      // heap.Remove index
+	tent     float64 // tentative distance
+	prevNode Node    // path back to start
+	prevEdge Edge    // edge from prevNode to the node of this struct
+	n        int     // number of nodes in path
+	done     bool    // true when tent and prev represent shortest path
+	rx       int     // heap.Remove index
 }
 
 // Reset prepares a Dijkstra struct for a shortest path search.  It should
@@ -116,8 +117,8 @@ func DijkstraShortestPath(g Graph, start, end Node) ([]Neighbor, float64) {
 					heap.Remove(&unvis, nd.rx)
 				}
 				nd.tent = d
-				nd.prev.Node = current
-				nd.prev.Edge = nb.Edge
+				nd.prevNode = current
+				nd.prevEdge = nb.Edge
 				nd.n = cd.n + 1
 				heap.Push(&unvis, nb.Node)
 			}
@@ -132,10 +133,10 @@ func DijkstraShortestPath(g Graph, start, end Node) ([]Neighbor, float64) {
 			i := cd.n
 			path := make([]Neighbor, i)
 			for n := current; n != nil; {
-				prev := n.D().prev
 				i--
-				path[i] = Neighbor{prev.Edge, n}
-				n = prev.Node
+				d := n.D()
+				path[i] = Neighbor{d.prevEdge, n}
+				n = d.prevNode
 			}
 			return path, distance
 		}
