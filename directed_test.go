@@ -7,20 +7,22 @@ import (
 )
 
 // node represents a node in a directed graph.  It represents directed edges
-// from the node with the handy Neighbor type from the graph package.
+// from the node with the handy DijkstraNeighbor type from the graph package.
 type node struct {
-	nbs  []graph.Neighbor // directed edges as Neighbors
-	name string           // example application specific data
+	nbs  []graph.DijkstraNeighbor // directed edges as DijkstraNeighbors
+	name string                   // example application specific data
 }
 
 // edge is a simple number representing an edge length/distance/weight.
 type edge float64
 
-// node implements graph.Node, also fmt.Stringer
-func (n *node) Neighbors([]graph.Neighbor) []graph.Neighbor { return n.nbs }
-func (n *node) String() string                              { return n.name }
+// node implements graph.DijkstraNode, also fmt.Stringer
+func (n *node) Neighbors([]graph.DijkstraNeighbor) []graph.DijkstraNeighbor {
+	return n.nbs
+}
+func (n *node) String() string { return n.name }
 
-// edge implements graph.Edge
+// edge implements graph.DijkstraEdge
 func (e edge) Distance() float64 { return float64(e) }
 
 // edgeData struct for simple specification of example data
@@ -61,7 +63,7 @@ func linkGraph(g []edgeData, start, end string) (allNodes int, startNode, endNod
 	// second pass to link neighbors
 	for _, ge := range g {
 		n1 := all[ge.v1]
-		n1.nbs = append(n1.nbs, graph.Neighbor{edge(ge.l), all[ge.v2]})
+		n1.nbs = append(n1.nbs, graph.DijkstraNeighbor{edge(ge.l), all[ge.v2]})
 	}
 	return len(all), all[start], all[end]
 }
