@@ -96,18 +96,19 @@ func DijkstraShortestPath(start, end DijkstraNode) ([]DijkstraNeighbor, float64)
 		for _, nb := range nbs {
 			if nd := s.d[nb.DijkstraNode]; !nd.done {
 				dist := cd.tp.dist + nb.Distance()
-				tent := nd.tp != nil
-				if tent && nd.tp.dist <= dist {
-					continue
-				}
-				nd.prevNode = current
-				nd.prevEdge = nb.DijkstraEdge
-				if tent {
+				if nd.tp != nil { // if nd already in tentative set
+					if nd.tp.dist <= dist {
+						continue
+					}
+					nd.prevNode = current
+					nd.prevEdge = nb.DijkstraEdge
 					nd.tp.dist = dist
 					nd.tp.n = cd.tp.n + 1
 					s.d[nb.DijkstraNode] = nd
 					heap.Fix(s, nd.tp.rx)
 				} else {
+					nd.prevNode = current
+					nd.prevEdge = nb.DijkstraEdge
 					nd.tp = &tentPath{
 						dist: dist,
 						n:    cd.tp.n + 1}
