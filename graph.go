@@ -83,15 +83,11 @@ type search struct {
 // Also returned is the total path length.  If the end node cannot be reached
 // from the start node, the returned neighbor list will be nil.
 func DijkstraShortestPath(start, end DijkstraNode) ([]DijkstraNeighbor, float64) {
-	// WP steps 1 and 2.
-	// WP references are to the algorithm description on Wikepedia,
-	// http://en.wikipedia.org/wiki/Dijkstra%27s_algorithm#Algorithm
 	current := start
 	cd := dijkstra{tp: &tentPath{n: 1}}
 	s := &search{d: map[DijkstraNode]dijkstra{current: cd}}
 	var nbs []DijkstraNeighbor
 	for {
-		// WP step 3: update tentative distances to neighbors
 		nbs = current.Neighbors(nbs[:0])
 		for _, nb := range nbs {
 			if nd := s.d[nb.DijkstraNode]; !nd.done {
@@ -117,11 +113,8 @@ func DijkstraShortestPath(start, end DijkstraNode) ([]DijkstraNeighbor, float64)
 				}
 			}
 		}
-		// WP step 4: mark current node visited, record path and distance
 		cd.done = true
 		if current == end {
-			// WP step 5 (case of end node reached)
-			// record path and distance for return value
 			distance := cd.tp.dist
 			// recover path by tracing prev links
 			i := cd.tp.n
@@ -135,10 +128,10 @@ func DijkstraShortestPath(start, end DijkstraNode) ([]DijkstraNeighbor, float64)
 			return path, distance
 		}
 		if len(s.n) == 0 {
-			break // WP step 5 (case of no more reachable nodes)
+			break // no more reachable nodes
 		}
 		cd.tp = nil
-		// WP step 6: new current is node with smallest tentative distance
+		// new current is node with smallest tentative distance
 		current = heap.Pop(s).(DijkstraNode)
 		cd = s.d[current]
 	}
