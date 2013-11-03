@@ -115,7 +115,7 @@ func DijkstraShortestPath(start, end DijkstraNode) ([]DijkstraNeighbor, float64)
 			dist := ct.dist + nb.Distance()
 			if nd.tx > 0 { // node already in tentative set
 				nt := &s.tpool[nd.tx]
-				if nt.dist <= dist {
+				if dist >= nt.dist {
 					continue // it's no help
 				}
 				// the path through current to this node is shorter
