@@ -61,7 +61,7 @@ type DijkstraNeighbor struct {
 // and prevNode and prevEdge are updated with will values representing the
 // shortest path from the start node.
 type dijkstra struct {
-	tx       int          // status/index of tentPath in tpool
+	tx       int          // status/index of tentPath in pool that backs heap
 	prevNode DijkstraNode // path back to start
 	prevEdge DijkstraEdge // edge from prevNode to the node of this struct
 }
@@ -71,15 +71,13 @@ type tentPath struct {
 	dist float64 // tentative path distance
 	n    int     // number of nodes in path
 	rx   int     // heap.Remove index
+	nd   DijkstraNode
 }
 
-// search holds data needed to perform a single search.  Allocating data
-// per call of the search search function allows different searches to run
-// concurrently.  Data here is needed by methods satisfying heap.Interface.
-type search struct {
-	n     []DijkstraNode            // backs tentative set heap
-	d     map[DijkstraNode]dijkstra // recovers dijkstra struct
-	tpool []tentPath                // recovers tentPath struct
+type tentHeap struct {
+	pool []tentPath
+	heap []int // values are indexes into pool
+	free []int // values are indexes into pool
 }
 
 // DijkstraShortestPath finds the shortest path between two nodes.
@@ -99,22 +97,21 @@ type search struct {
 func DijkstraShortestPath(start, end DijkstraNode) ([]DijkstraNeighbor, float64) {
 	current := start
 	cd := dijkstra{tx: -1} // mark start done.  it skips the heap.
-	s := &search{
-		d:     map[DijkstraNode]dijkstra{current: cd},
-		tpool: make([]tentPath, 1)} // zero element unused
-	ct := tentPath{n: 1}       // path length 1 for start node
-	var tfree []int            // stack of indexes into tpool
+	d := map[DijkstraNode]dijkstra{current: cd}
+	ct := tentPath{n: 1} // path length 1 for start node
+	h := &tentHeap{
+		pool: make([]tentPath, 1)} // zero element unused
 	var nbs []DijkstraNeighbor // recycled slice
 	for {
 		nbs = current.Neighbors(nbs[:0])
 		for _, nb := range nbs {
-			nd := s.d[nb.DijkstraNode]
+			nd := d[nb.DijkstraNode]
 			if nd.tx < 0 {
 				continue // skip nodes already done
 			}
 			dist := ct.dist + nb.Distance()
 			if nd.tx > 0 { // node already in tentative set
-				nt := &s.tpool[nd.tx]
+				nt := &h.pool[nd.tx]
 				if dist >= nt.dist {
 					continue // it's no help
 				}
@@ -124,29 +121,31 @@ func DijkstraShortestPath(start, end DijkstraNode) ([]DijkstraNeighbor, float64)
 				nt.n = ct.n + 1
 				nd.prevNode = current
 				nd.prevEdge = nb.DijkstraEdge
-				s.d[nb.DijkstraNode] = nd
-				heap.Fix(s, nt.rx)
+				d[nb.DijkstraNode] = nd
+				heap.Fix(h, nt.rx)
 			} else { // nd.tx was zero. this is the first visit to this node.
 				// first find a place for tentPath data
-				if len(tfree) == 0 {
+				if len(h.free) == 0 {
 					// nothing on the free list, extend the pool.
-					nd.tx = len(s.tpool)
-					s.tpool = append(s.tpool, tentPath{
+					nd.tx = len(h.pool)
+					h.pool = append(h.pool, tentPath{
+						nd:   nb.DijkstraNode,
 						dist: dist,
 						n:    ct.n + 1})
 				} else { // reuse
-					last := len(tfree) - 1
-					nd.tx = tfree[last]
-					tfree = tfree[:last]
-					s.tpool[nd.tx] = tentPath{
+					last := len(h.free) - 1
+					nd.tx = h.free[last]
+					h.free = h.free[:last]
+					h.pool[nd.tx] = tentPath{
+						nd:   nb.DijkstraNode,
 						dist: dist,
 						n:    ct.n + 1}
 				}
 				// push path data to heap
 				nd.prevNode = current
 				nd.prevEdge = nb.DijkstraEdge
-				s.d[nb.DijkstraNode] = nd
-				heap.Push(s, nb.DijkstraNode)
+				d[nb.DijkstraNode] = nd
+				heap.Push(h, nd.tx)
 			}
 		}
 		if current == end { // search complete
@@ -156,46 +155,47 @@ func DijkstraShortestPath(start, end DijkstraNode) ([]DijkstraNeighbor, float64)
 			path := make([]DijkstraNeighbor, i)
 			for n := current; n != nil; {
 				i--
-				nd := s.d[n]
+				nd := d[n]
 				path[i] = DijkstraNeighbor{nd.prevEdge, n}
 				n = nd.prevNode
 			}
 			return path, distance // success
 		}
-		if len(s.n) == 0 {
+		if len(h.heap) == 0 {
 			return nil, 0 // failure. no more reachable nodes
 		}
 		// new current is node with smallest tentative distance
-		current = heap.Pop(s).(DijkstraNode)
-		cd = s.d[current]
-		ct = s.tpool[cd.tx]
-		tfree = append(tfree, cd.tx) // recycle tentPath struct
+		ctx := heap.Pop(h).(int)
+		ct = h.pool[ctx]
+		current = ct.nd
+		cd = d[current]
+		h.free = append(h.free, ctx) // recycle tentPath struct
 		cd.tx = -1                   // done
-		s.d[current] = cd            // store the -1
+		d[current] = cd              // store the -1
 	}
 }
 
 // search implements container/heap
-func (s search) Len() int { return len(s.n) }
-func (s search) Less(i, j int) bool {
-	return s.tpool[s.d[s.n[i]].tx].dist < s.tpool[s.d[s.n[j]].tx].dist
+func (h tentHeap) Len() int { return len(h.heap) }
+func (h tentHeap) Less(i, j int) bool {
+	return h.pool[h.heap[i]].dist < h.pool[h.heap[j]].dist
 }
-func (s search) Swap(i, j int) {
-	s.n[i], s.n[j] = s.n[j], s.n[i]
-	s.tpool[s.d[s.n[i]].tx].rx = i
-	s.tpool[s.d[s.n[j]].tx].rx = j
+func (h tentHeap) Swap(i, j int) {
+	h.heap[i], h.heap[j] = h.heap[j], h.heap[i]
+	h.pool[h.heap[i]].rx = i
+	h.pool[h.heap[j]].rx = j
 }
-func (s *search) Push(x interface{}) {
-	nd := x.(DijkstraNode)
-	s.tpool[s.d[nd].tx].rx = len(s.n)
-	s.n = append(s.n, nd)
+func (h *tentHeap) Push(x interface{}) {
+	tx := x.(int)
+	h.pool[tx].rx = len(h.heap)
+	h.heap = append(h.heap, tx)
 }
-func (s *search) Pop() interface{} {
-	if len(s.n) == 0 {
+func (h *tentHeap) Pop() interface{} {
+	if len(h.heap) == 0 { // not needed?
 		return nil
 	}
-	last := len(s.n) - 1
-	r := s.n[last]
-	s.n = s.n[:last]
-	return r
+	last := len(h.heap) - 1
+	tx := h.heap[last]
+	h.heap = h.heap[:last]
+	return tx
 }
