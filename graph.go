@@ -115,8 +115,8 @@ func DijkstraShortestPath(start, end DijkstraNode) ([]DijkstraNeighbor, float64)
 				if dist >= nt.dist {
 					continue // it's no help
 				}
-				// the path through current to this node is shorter
-				// than some other path.  record new path data and reheap.
+				// the path through current to this node is shorter than some
+				// other path to this node.  record new path data and reheap.
 				nt.dist = dist
 				nt.n = ct.n + 1
 				nd.prevNode = current
@@ -191,9 +191,6 @@ func (h *tentHeap) Push(x interface{}) {
 	h.heap = append(h.heap, tx)
 }
 func (h *tentHeap) Pop() interface{} {
-	if len(h.heap) == 0 { // not needed?
-		return nil
-	}
 	last := len(h.heap) - 1
 	tx := h.heap[last]
 	h.heap = h.heap[:last]
