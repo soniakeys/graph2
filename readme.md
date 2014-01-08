@@ -9,6 +9,8 @@ Graph implements Dijkstra’s shortest path algorithm.
 
 [![Go Walker](http://gowalker.org/api/v1/badge)](http://gowalker.org/github.com/soniakeys/graph)
 
+[![status](https://sourcegraph.com/api/repos/github.com/soniakeys/graph/badges/status.png)](https://sourcegraph.com/github.com/soniakeys/graph)
+
 The package provides a way to do shortest path searches on existing data
 structures.  Rather than specify types you must use for graphs, nodes, and
 edges, the package specifies some interfaces you must implement on your
