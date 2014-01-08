@@ -15,7 +15,7 @@ import "container/heap"
 // package documentation.  Arguments start and end must be nodes in a properly
 // connected graph.  The found shortest path is returned as a Distanceighbor
 // slice.  The first element of this slice will be the start node.  (The edge
-// member will be nil, as there is no edge that needs be identified going to
+// member will be nil, as there is no edge that needs to be identified going to
 // the start node.)  Remaining elements give the found path of edges and nodes.
 // Also returned is the total path length.  If the end node cannot be reached
 // from the start node, the returned neighbor list will be nil.
