@@ -1,4 +1,4 @@
 language: go
 
 go:
-  - go1.2rc4
+  - go1.2
