@@ -21,9 +21,9 @@ type edge struct {
 	to     *node
 }
 
-func (n *node) Neighbors(nbs []DijkstraNeighbor) []DijkstraNeighbor {
+func (n *node) Neighbors(nbs []DistanceNeighbor) []DistanceNeighbor {
 	for _, e := range n.nbs {
-		nbs = append(nbs, DijkstraNeighbor{e, e.to})
+		nbs = append(nbs, DistanceNeighbor{e, e.to})
 	}
 	return nbs
 }

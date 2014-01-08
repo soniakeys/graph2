@@ -22,12 +22,12 @@ type uEdge struct {
 	// more application specific data could go here
 }
 
-// uNode implements graph.DijkstraNode, also fmt.Stringer
-func (n *uNode) Neighbors(nbs []graph.DijkstraNeighbor) []graph.DijkstraNeighbor {
+// uNode implements graph.DistanceNode, also fmt.Stringer
+func (n *uNode) Neighbors(nbs []graph.DistanceNeighbor) []graph.DistanceNeighbor {
 	for _, e := range n.eds {
-		nb := graph.DijkstraNeighbor{e, e.n1}
-		if nb.DijkstraNode == n {
-			nb.DijkstraNode = e.n2
+		nb := graph.DistanceNeighbor{e, e.n1}
+		if nb.DistanceNode == n {
+			nb.DistanceNode = e.n2
 		}
 		nbs = append(nbs, nb)
 	}
@@ -35,7 +35,7 @@ func (n *uNode) Neighbors(nbs []graph.DijkstraNeighbor) []graph.DijkstraNeighbor
 }
 func (n *uNode) String() string { return n.name }
 
-// uEdge implements graph.DijkstraEdge, also fmt.Stringer
+// uEdge implements graph.DistanceEdge, also fmt.Stringer
 func (e uEdge) String() string    { return fmt.Sprint(e.dist) }
 func (e uEdge) Distance() float64 { return e.dist }
 
