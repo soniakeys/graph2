@@ -1,45 +1,47 @@
 // Copyright 2013 Sonia Keys
 // License MIT: http://opensource.org/licenses/MIT
 
-package graph
+package graph_test
 
 import (
 	"math"
 	"math/rand"
 	"sort"
 	"testing"
+
+	"github.com/soniakeys/graph"
 )
 
-type node struct {
+type stNode struct {
 	name string
 	x, y float64
-	nbs  []edge
+	nbs  []stEdge
 }
 
-type edge struct {
+type stEdge struct {
 	length float64
-	to     *node
+	to     *stNode
 }
 
-func (n *node) DistanceNeighbors(nbs []DistanceNeighbor) []DistanceNeighbor {
+func (n *stNode) DistanceNeighbors(nbs []graph.DistanceNeighbor) []graph.DistanceNeighbor {
 	for _, e := range n.nbs {
-		nbs = append(nbs, DistanceNeighbor{e, e.to})
+		nbs = append(nbs, graph.DistanceNeighbor{e, e.to})
 	}
 	return nbs
 }
 
-func (n *node) String() string { return n.name }
+func (n *stNode) String() string { return n.name }
 
-func (e edge) Distance() float64 { return float64(e.length) }
+func (e stEdge) Distance() float64 { return float64(e.length) }
 
-type xyList []node
+type xyList []stNode
 
 func (l xyList) Len() int           { return len(l) }
 func (l xyList) Less(i, j int) bool { return l[i].name < l[j].name }
 func (l xyList) Swap(i, j int)      { l[i], l[j] = l[j], l[i] }
 
 // generate a random graph
-func r(nNodes, nEdges int) (start, end *node) {
+func r(nNodes, nEdges int) (start, end *stNode) {
 	s := rand.New(rand.NewSource(59))
 	// generate unique node names
 	nameMap := map[string]bool{}
@@ -71,7 +73,7 @@ func r(nNodes, nEdges int) (start, end *node) {
 		if dist > s.Float64()*math.Sqrt2 {
 			continue
 		}
-		n1.nbs = append(n1.nbs, edge{dist, n2})
+		n1.nbs = append(n1.nbs, stEdge{dist, n2})
 		switch i {
 		case 0:
 			start = n1
@@ -88,7 +90,7 @@ func Benchmark100(b *testing.B) {
 	start, end := r(100, 200)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		DijkstraShortestPath(start, end)
+		graph.DijkstraShortestPath(start, end)
 	}
 }
 
@@ -97,7 +99,7 @@ func Benchmark1e3(b *testing.B) {
 	start, end := r(1000, 3000)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		DijkstraShortestPath(start, end)
+		graph.DijkstraShortestPath(start, end)
 	}
 }
 
@@ -106,7 +108,7 @@ func Benchmark1e4(b *testing.B) {
 	start, end := r(1e4, 5e4)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		DijkstraShortestPath(start, end)
+		graph.DijkstraShortestPath(start, end)
 	}
 }
 
@@ -115,6 +117,6 @@ func Benchmark1e5(b *testing.B) {
 	start, end := r(1e5, 1e6)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		DijkstraShortestPath(start, end)
+		graph.DijkstraShortestPath(start, end)
 	}
 }

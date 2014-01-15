@@ -16,7 +16,7 @@ import (
 // to another node.  It represents directed edges from the node with the handy
 // EstimateNeighbor type from the graph package.
 type estNode struct {
-	nbs []graph.EstimateNeighbor // directed edges as DistanceNeighbors
+	nbs []graph.EstimateNeighbor // directed edges as EstimateNeighbors
 	// hard coded distance estimate (left at 0.0 currently)
 	hEnd float64
 	name string // example application specific data
