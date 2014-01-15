@@ -23,9 +23,10 @@ import (
 // heuristic distance estimate.
 //
 // AStarA with an inadmissable heuristic becomes algorithm A.  Algorithm A
-// will still find a path, but it is not guaranteed to be the shortest path.
+// will find a path, but it is not guaranteed to be the shortest path.
 // The heuristic still guides the search however, so a nearly admissable
-// heuristic is likely to find a very good path, if not the best.
+// heuristic is likely to find a very good path, if not the best.  Quality
+// of the path returned degrades gracefully with the quality of the heuristic.
 //
 // Two interfaces, EstimateNode and DistanceEdge, must be implemented as
 // described in this package documentation.  Arguments start and end must
@@ -47,7 +48,7 @@ func AStarA(start, end EstimateNode) ([]EstimateNeighbor, float64) {
 	// the chain of nodes following the prev member represents the
 	// best path found so far from the start to this node.
 	r := map[EstimateNode]*rNode{start: p}
-	// o is a heap of nodes "open" for exploration.  nodes go on the heap
+	// oh is a heap of nodes "open" for exploration.  nodes go on the heap
 	// when they get an initial or new "g" path distance, and therefore a
 	// new "f" which serves as priority for exploration.
 	oh := openHeap{p}
@@ -82,7 +83,7 @@ func AStarA(start, end EstimateNode) ([]EstimateNeighbor, float64) {
 					continue
 				}
 				// cool, we found a better way to get to this node.
-				// fill alt with new data and reheap.
+				// update alt with new data and make sure it's on the heap.
 				alt.prevNode = bestPath
 				alt.prevEdge = nb.DistanceEdge
 				alt.g = g
@@ -105,6 +106,95 @@ func AStarA(start, end EstimateNode) ([]EstimateNeighbor, float64) {
 				}
 				r[nd] = p         // add to list of reached nodes
 				heap.Push(&oh, p) // and it's now open for exploration
+			}
+		}
+	}
+	return nil, math.Inf(1) // no path
+}
+
+func AStarM(start, end EstimateNode) ([]EstimateNeighbor, float64) {
+	p := &rNode{
+		nd: start,
+		f:  start.Estimate(end),
+		n:  1,
+	}
+
+	// difference from AStarA:
+	// instead of r, a list of all nodes reached so far, there are two
+	// lists, open and closed. open contains nodes "open" for exploration.
+	// nodes are added to the list as they are reached, then moved to
+	// closed as they are found to be on the best path.
+	open := map[EstimateNode]*rNode{start: p}
+	closed := map[EstimateNode]struct{}{}
+
+	oh := openHeap{p}
+	var nbs []EstimateNeighbor // recycled slice
+	for len(oh) > 0 {
+		bestPath := heap.Pop(&oh).(*rNode)
+		bestNode := bestPath.nd
+		if bestNode == end {
+			// done
+			dist := bestPath.g
+			i := bestPath.n
+			path := make([]EstimateNeighbor, i)
+			for bestPath != nil {
+				i--
+				path[i] = EstimateNeighbor{bestPath.prevEdge, bestPath.nd}
+				bestPath = bestPath.prevNode
+			}
+			return path, dist
+		}
+
+		// difference from AStarA:
+		// move nodes to closed list as they are found to be best so far.
+		delete(open, bestNode)
+		closed[bestNode] = struct{}{}
+
+		nbs := bestPath.nd.EstimateNeighbors(nbs[:0]) // recycle
+		for _, nb := range nbs {
+			nd := nb.EstimateNode
+
+			// difference from AStarA:
+			// Monotonicity means that f cannot be improved.
+			if _, ok := closed[nd]; ok {
+				continue
+			}
+
+			g := bestPath.g + nb.Distance()
+			if alt, reached := open[nd]; reached {
+				if g > alt.g {
+					// new path to nd is longer than some alternate path
+					continue
+				}
+				if g == alt.g && bestPath.n+1 >= alt.n {
+					// new path has identical length of some alternate path
+					// but it takes more hops.  go with fewest nodes in path.
+					continue
+				}
+				// cool, we found a better way to get to this node.
+				// update alt with new data and reheap.
+				alt.prevNode = bestPath
+				alt.prevEdge = nb.DistanceEdge
+				alt.g = g
+				alt.f = g + alt.nd.Estimate(end)
+				alt.n = bestPath.n + 1
+
+				// difference from AStarA:
+				// we know alt was on the heap because we found it in the
+				// open list.
+				heap.Fix(&oh, alt.rx)
+			} else {
+				// bestNode being reached for the first time.
+				p := &rNode{
+					nd:       nd,
+					prevNode: bestPath,
+					prevEdge: nb.DistanceEdge,
+					g:        g,
+					f:        g + start.Estimate(end),
+					n:        bestPath.n + 1,
+				}
+				open[nd] = p      // new node is now open for exploration.
+				heap.Push(&oh, p) // keep heap matching open list.
 			}
 		}
 	}
