@@ -5,9 +5,9 @@ package graph
 
 import "container/heap"
 
-// DijkstraShortestPath finds the shortest path between two nodes.
+// DijkstraShortestPath finds a shortest path between two nodes.
 //
-// It finds the shortest path between two nodes in a general directed or
+// It finds a shortest path between two nodes in a general directed or
 // undirected graph.  The path length minimized is the sum of edge lengths
 // in the path, which must be non-negative.
 //
@@ -28,7 +28,7 @@ func DijkstraShortestPath(start, end DistanceNode) ([]DistanceNeighbor, float64)
 		pool: make([]tentPath, 1)} // zero element unused
 	var nbs []DistanceNeighbor // recycled slice
 	for {
-		nbs = current.Neighbors(nbs[:0])
+		nbs = current.DistanceNeighbors(nbs[:0])
 		for _, nb := range nbs {
 			nd := d[nb.DistanceNode]
 			if nd.tx < 0 {

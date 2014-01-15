@@ -21,7 +21,7 @@ type edge struct {
 	to     *node
 }
 
-func (n *node) Neighbors(nbs []DistanceNeighbor) []DistanceNeighbor {
+func (n *node) DistanceNeighbors(nbs []DistanceNeighbor) []DistanceNeighbor {
 	for _, e := range n.nbs {
 		nbs = append(nbs, DistanceNeighbor{e, e.to})
 	}

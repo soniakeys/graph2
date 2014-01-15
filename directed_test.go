@@ -5,6 +5,7 @@ package graph_test
 
 import (
 	"fmt"
+	"testing"
 
 	"github.com/soniakeys/graph"
 )
@@ -20,7 +21,7 @@ type node struct {
 type edge float64
 
 // node implements graph.DistanceNode, also fmt.Stringer
-func (n *node) Neighbors([]graph.DistanceNeighbor) []graph.DistanceNeighbor {
+func (n *node) DistanceNeighbors([]graph.DistanceNeighbor) []graph.DistanceNeighbor {
 	return n.nbs
 }
 func (n *node) String() string { return n.name }
@@ -90,4 +91,21 @@ func ExampleDijkstraShortestPath_directed() {
 	// Directed graph with 6 nodes, 9 edges
 	// Shortest path: [{<nil> a} {9 c} {11 d} {6 e}]
 	// Path length: 26
+}
+
+func TestDirected(t *testing.T) {
+	// construct linked representation of example data
+	_, startNode, endNode :=
+		linkGraph(exampleEdges, exampleStart, exampleEnd)
+	// run Dijkstra's shortest path algorithm
+	p, l := graph.DijkstraShortestPath(startNode, endNode)
+	// extract path of nodes from neighbor list result
+	// check path length result
+	s := 0.
+	for _, n := range p[1:] {
+		s += n.Distance()
+	}
+	if s != l {
+		t.Fatal("wrong path length.  got", l, "but length is", s)
+	}
 }

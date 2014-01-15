@@ -23,7 +23,7 @@ type uEdge struct {
 }
 
 // uNode implements graph.DistanceNode, also fmt.Stringer
-func (n *uNode) Neighbors(nbs []graph.DistanceNeighbor) []graph.DistanceNeighbor {
+func (n *uNode) DistanceNeighbors(nbs []graph.DistanceNeighbor) []graph.DistanceNeighbor {
 	for _, e := range n.eds {
 		nb := graph.DistanceNeighbor{e, e.n1}
 		if nb.DistanceNode == n {
