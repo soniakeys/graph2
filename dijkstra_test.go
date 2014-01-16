@@ -4,6 +4,8 @@
 package graph_test
 
 import (
+	"fmt"
+	"math"
 	"testing"
 
 	"github.com/soniakeys/graph"
@@ -66,13 +68,20 @@ func TestDijkstraDirected(t *testing.T) {
 	startNode, endNode := linkDjGraph()
 	// run Dijkstra's shortest path algorithm
 	p, l := graph.DijkstraShortestPath(startNode, endNode)
-	// extract path of nodes from neighbor list result
-	// check path length result
-	s := 0.
-	for _, n := range p[1:] {
-		s += n.Distance()
+	expected := "[{<nil> a} {9 c} {11 d} {6 e}]"
+	got := fmt.Sprint(p)
+	if got != expected {
+		t.Fatal("wrong path.  expected", expected, "got", got)
 	}
-	if s != l {
-		t.Fatal("wrong path length.  got", l, "but length is", s)
+	if l != 26 {
+		t.Fatal("wrong path length.  expected 26, got", l)
+	}
+	// reverse path should not exist with directed example data
+	p, l = graph.DijkstraShortestPath(endNode, startNode)
+	if p != nil {
+		t.Fatal("wrong path.  expected nil, got", p)
+	}
+	if l != math.Inf(1) {
+		t.Fatal("wrong path length.  expected +Inf, got", l)
 	}
 }

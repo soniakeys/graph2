@@ -3,7 +3,10 @@
 
 package graph
 
-import "container/heap"
+import (
+	"container/heap"
+	"math"
+)
 
 // DijkstraShortestPath finds a shortest path between two nodes.
 //
@@ -18,7 +21,8 @@ import "container/heap"
 // member will be nil, as there is no edge that needs to be identified going to
 // the start node.)  Remaining elements give the found path of edges and nodes.
 // Also returned is the total path length.  If the end node cannot be reached
-// from the start node, the returned neighbor list will be nil.
+// from the start node, the returned neighbor list will be nil and the path
+// length +Inf.
 func DijkstraShortestPath(start, end DistanceNode) ([]DistanceNeighbor, float64) {
 	current := start
 	cd := dijkstra{tx: -1} // mark start done.  it skips the heap.
@@ -87,7 +91,7 @@ func DijkstraShortestPath(start, end DistanceNode) ([]DistanceNeighbor, float64)
 			return path, distance // success
 		}
 		if len(h.heap) == 0 {
-			return nil, 0 // failure. no more reachable nodes
+			return nil, math.Inf(1) // failure. no more reachable nodes
 		}
 		// new current is node with smallest tentative distance
 		ctx := heap.Pop(h).(int)
