@@ -16,14 +16,23 @@ import (
 // distances.  It represents directed edges from the node with the handy
 // DistanceNeighbor type from the graph package.
 type dxNode struct {
-	nbs  []graph.DistanceNeighbor // directed edges as DistanceNeighbors
-	name string                   // example application specific data
+	nbs  []graph.Neighbor // directed edges as graph.Neighbors
+	name string           // example application specific data
 }
 
-// dxNode implements graph.DistanceNode, also fmt.Stringer
-func (n *dxNode) DistanceNeighbors([]graph.DistanceNeighbor) []graph.DistanceNeighbor {
+// dxNode implements graph.NeighborNode, also fmt.Stringer
+func (n *dxNode) Neighbors([]graph.Neighbor) []graph.Neighbor {
 	return n.nbs
 }
+func (n *dxNode) Adjacent(s graph.NeighborNode) graph.Edge {
+	for _, nb := range n.nbs {
+		if n == nb.Nd {
+			return nb.Ed
+		}
+	}
+	return nil
+}
+
 func (n *dxNode) String() string { return n.name }
 
 // dxEdge implements graph.DistanceEdge
@@ -59,8 +68,7 @@ func linkDxGraph() (startNode, endNode *dxNode) {
 	// link neighbors
 	for _, ge := range dxEdgeData {
 		n1 := all[ge.v1]
-		n1.nbs = append(n1.nbs,
-			graph.DistanceNeighbor{dxEdge(ge.l), all[ge.v2]})
+		n1.nbs = append(n1.nbs, graph.Neighbor{dxEdge(ge.l), all[ge.v2]})
 	}
 	return all["a"], all["e"]
 }
