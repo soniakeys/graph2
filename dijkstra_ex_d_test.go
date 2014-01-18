@@ -16,18 +16,27 @@ import (
 // distances.  It represents directed edges from the node with the handy
 // DistanceNeighbor type from the graph package.
 type dxNode struct {
-	nbs  []graph.Neighbor // directed edges as graph.Neighbors
-	name string           // example application specific data
+	nbs  []dxPair // directed edges
+	name string   // example application specific data
+}
+
+type dxPair struct { // directed edges
+	ed graph.Edge
+	nd graph.NeighborNode
 }
 
 // dxNode implements graph.NeighborNode, also fmt.Stringer
-func (n *dxNode) Neighbors([]graph.Neighbor) []graph.Neighbor {
-	return n.nbs
+func (n *dxNode) Visit(v graph.NbVisitor) {
+	for _, nb := range n.nbs {
+		if !v(nb.ed, nb.nd) {
+			return
+		}
+	}
 }
 func (n *dxNode) Adjacent(s graph.NeighborNode) graph.Edge {
 	for _, nb := range n.nbs {
-		if n == nb.Nd {
-			return nb.Ed
+		if nb.nd == s {
+			return nb.ed
 		}
 	}
 	return nil
@@ -68,7 +77,7 @@ func linkDxGraph() (startNode, endNode *dxNode) {
 	// link neighbors
 	for _, ge := range dxEdgeData {
 		n1 := all[ge.v1]
-		n1.nbs = append(n1.nbs, graph.Neighbor{dxEdge(ge.l), all[ge.v2]})
+		n1.nbs = append(n1.nbs, dxPair{dxEdge(ge.l), all[ge.v2]})
 	}
 	return all["a"], all["e"]
 }
@@ -80,15 +89,17 @@ func ExampleDijkstraShortestPath_directed() {
 	fmt.Printf("Directed graph with %d nodes, %d edges\n",
 		len(dxNodeData), len(dxEdgeData))
 	// run Dijkstra's shortest path algorithm
-	p, l := graph.DijkstraShortestPath(startNode, endNode)
-	if p == nil {
+	ndPath, edPath, l := graph.DijkstraShortestPath(startNode, endNode)
+	if ndPath == nil {
 		fmt.Println("No path from start node to end node")
 		return
 	}
-	fmt.Println("Shortest path:", p)
+	fmt.Println("Shortest path:", ndPath)
+	fmt.Println("Edges:", edPath)
 	fmt.Println("Path length:", l)
 	// Output:
 	// Directed graph with 6 nodes, 9 edges
-	// Shortest path: [{<nil> a} {9 c} {11 d} {6 e}]
+	// Shortest path: [a c d e]
+	// Edges: [9 11 6]
 	// Path length: 26
 }
