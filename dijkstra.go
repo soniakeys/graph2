@@ -48,12 +48,12 @@ func DijkstraShortestPath(start, end NeighborNode) ([]NeighborNode, []Edge, floa
 			}
 			return ndPath, edPath, distance // success
 		}
-		current.Visit(func(ed Edge, nb NeighborNode) bool {
-			nd := d[nb]
+		current.Visit(func(nb Neighbor) bool {
+			nd := d[nb.Nd]
 			if nd.tx < 0 {
 				return true // skip nodes already done
 			}
-			dist := ct.dist + ed.(DistanceEdge).Distance()
+			dist := ct.dist + nb.Ed.(DistanceEdge).Distance()
 			if nd.tx > 0 { // node already in tentative set
 				nt := &h.pool[nd.tx]
 				if dist >= nt.dist {
@@ -64,8 +64,8 @@ func DijkstraShortestPath(start, end NeighborNode) ([]NeighborNode, []Edge, floa
 				nt.dist = dist
 				nt.n = ct.n + 1
 				nd.prevNode = current
-				nd.prevEdge = ed.(DistanceEdge)
-				d[nb] = nd
+				nd.prevEdge = nb.Ed.(DistanceEdge)
+				d[nb.Nd] = nd
 				heap.Fix(h, nt.rx)
 			} else { // nd.tx was zero. this is the first visit to this node.
 				// first find a place for tentPath data
@@ -73,7 +73,7 @@ func DijkstraShortestPath(start, end NeighborNode) ([]NeighborNode, []Edge, floa
 					// nothing on the free list, extend the pool.
 					nd.tx = len(h.pool)
 					h.pool = append(h.pool, tentPath{
-						nd:   nb,
+						nd:   nb.Nd,
 						dist: dist,
 						n:    ct.n + 1})
 				} else { // reuse
@@ -81,14 +81,14 @@ func DijkstraShortestPath(start, end NeighborNode) ([]NeighborNode, []Edge, floa
 					nd.tx = h.free[last]
 					h.free = h.free[:last]
 					h.pool[nd.tx] = tentPath{
-						nd:   nb,
+						nd:   nb.Nd,
 						dist: dist,
 						n:    ct.n + 1}
 				}
 				// push path data to heap
 				nd.prevNode = current
-				nd.prevEdge = ed.(DistanceEdge)
-				d[nb] = nd
+				nd.prevEdge = nb.Ed.(DistanceEdge)
+				d[nb.Nd] = nd
 				heap.Push(h, nd.tx)
 			}
 			return true

@@ -12,10 +12,15 @@ type Edge interface{}
 // A NeighborNode is one that has some way of knowing it's neighbors.
 type NeighborNode interface {
 	Adjacent(NeighborNode) Edge
-	Visit(NbVisitor)
+	Visit(NeighborVisitor)
 }
 
-type NbVisitor func(Edge, NeighborNode) bool
+type NeighborVisitor func(Neighbor) bool
+
+type Neighbor struct {
+	Ed Edge
+	Nd NeighborNode
+}
 
 // DistanceEdge is an edge that describes a distance, typically a
 // non-negative quantity.  Some graph search algorithms require non-negative
