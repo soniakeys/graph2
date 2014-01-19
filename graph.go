@@ -6,21 +6,25 @@ package graph
 // graph.go has interfaces that need to be implemented on a graph
 // representation for various graph search functions in this package.
 
-type Node interface{}
-type Edge interface{}
-
-// A NeighborNode is one that has some way of knowing it's neighbors.
+// A NeighborNode has some way of visiting it's neighbors.
 type NeighborNode interface {
-	Adjacent(NeighborNode) Edge
+	// Visit should call the NeighborVisitor function for each neighbor
+	// of the receiver.
 	Visit(NeighborVisitor)
 }
 
-type NeighborVisitor func(Neighbor) bool
+// An algorithm can process neighbors of a NeighborNode by passing a
+// NeighborVisitor to NeigborNode.Visit.
+type NeighborVisitor func(Neighbor)
 
+// Neighbor associates an edge with the node that is reached by the edge.
 type Neighbor struct {
 	Ed Edge
 	Nd NeighborNode
 }
+
+// Edge is completely generic to hold any object representing an edge.
+type Edge interface{}
 
 // DistanceEdge is an edge that describes a distance, typically a
 // non-negative quantity.  Some graph search algorithms require non-negative
@@ -49,5 +53,9 @@ type DistanceEdge interface {
 // Some graph search algorithms require admissability or monotonicity.
 // Check the documentation for the graph search function you will use.
 type EstimateNode interface {
+	NeighborNode
+	Estimator
+}
+type Estimator interface {
 	Estimate(EstimateNode) float64
 }

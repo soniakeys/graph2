@@ -1,12 +1,13 @@
 // Copyright 2013 Sonia Keys
 // License MIT: http://opensource.org/licenses/MIT
 
-package graph_test
+package search_test
 
 import (
 	"fmt"
 
 	"github.com/soniakeys/graph"
+	"github.com/soniakeys/graph/search"
 )
 
 // The example contains an example graph representation and example data.
@@ -16,15 +17,17 @@ import (
 // to another node.  It represents directed edges from the node with the handy
 // EstimateNeighbor type from the graph package.
 type estNode struct {
-	nbs []graph.EstimateNeighbor // directed edges as EstimateNeighbors
+	nbs []graph.Neighbor // directed edges as EstimateNeighbors
 	// hard coded distance estimate (left at 0.0 currently)
 	hEnd float64
 	name string // example application specific data
 }
 
 // estNode implements graph.EstimateNode, also fmt.Stringer
-func (n *estNode) EstimateNeighbors([]graph.EstimateNeighbor) []graph.EstimateNeighbor {
-	return n.nbs
+func (n *estNode) Visit(v graph.NeighborVisitor) {
+	for _, nb := range n.nbs {
+		v(nb)
+	}
 }
 func (n *estNode) Estimate(graph.EstimateNode) float64 { return n.hEnd }
 func (n *estNode) String() string                      { return n.name }
@@ -63,7 +66,7 @@ func linkEstGraph() (startNode, endNode *estNode) {
 	for _, ge := range estEdgeData {
 		n1 := all[ge.v1]
 		n1.nbs = append(n1.nbs,
-			graph.EstimateNeighbor{estEdge(ge.l), all[ge.v2]})
+			graph.Neighbor{estEdge(ge.l), all[ge.v2]})
 	}
 	return all["a"], all["e"]
 }
@@ -75,7 +78,7 @@ func ExampleAStarA() {
 	fmt.Printf("Directed graph with %d nodes, %d edges\n",
 		len(estNodeData), len(estEdgeData))
 	// run AStarA
-	p, l := graph.AStarA(startNode, endNode)
+	p, l := search.AStarA(startNode, endNode)
 	if p == nil {
 		fmt.Println("No path from start node to end node")
 		return

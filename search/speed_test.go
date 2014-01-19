@@ -1,7 +1,7 @@
 // Copyright 2013 Sonia Keys
 // License MIT: http://opensource.org/licenses/MIT
 
-package graph_test
+package search_test
 
 import (
 	"math"
@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/soniakeys/graph"
+	"github.com/soniakeys/graph/search"
 )
 
 type stNode struct {
@@ -23,11 +24,10 @@ type stEdge struct {
 	to     *stNode
 }
 
-func (n *stNode) DistanceNeighbors(nbs []graph.DistanceNeighbor) []graph.DistanceNeighbor {
+func (n *stNode) Visit(v graph.NeighborVisitor) {
 	for _, e := range n.nbs {
-		nbs = append(nbs, graph.DistanceNeighbor{e, e.to})
+		v(graph.Neighbor{e, e.to})
 	}
-	return nbs
 }
 
 func (n *stNode) String() string { return n.name }
@@ -90,7 +90,7 @@ func Benchmark100(b *testing.B) {
 	start, end := r(100, 200)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		graph.DijkstraShortestPath(start, end)
+		search.DijkstraShortestPath(start, end)
 	}
 }
 
@@ -99,7 +99,7 @@ func Benchmark1e3(b *testing.B) {
 	start, end := r(1000, 3000)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		graph.DijkstraShortestPath(start, end)
+		search.DijkstraShortestPath(start, end)
 	}
 }
 
@@ -108,7 +108,7 @@ func Benchmark1e4(b *testing.B) {
 	start, end := r(1e4, 5e4)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		graph.DijkstraShortestPath(start, end)
+		search.DijkstraShortestPath(start, end)
 	}
 }
 
@@ -117,6 +117,6 @@ func Benchmark1e5(b *testing.B) {
 	start, end := r(1e5, 1e6)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		graph.DijkstraShortestPath(start, end)
+		search.DijkstraShortestPath(start, end)
 	}
 }

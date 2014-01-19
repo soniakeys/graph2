@@ -1,11 +1,13 @@
 // Copyright 2013 Sonia Keys
 // License MIT: http://opensource.org/licenses/MIT
 
-package graph
+package search
 
 import (
 	"container/heap"
 	"math"
+
+	"github.com/soniakeys/graph"
 )
 
 // AStarA finds a path between two nodes.
@@ -37,7 +39,7 @@ import (
 // found path of edges and nodes.  Also returned is the total path length.
 // If the end node cannot be reached from the start node, the returned neighbor
 // list will be nil and the distance will be +Inf.
-func AStarA(start, end EstimateNode) ([]EstimateNeighbor, float64) {
+func AStarA(start, end graph.EstimateNode) ([]graph.Neighbor, float64) {
 	// start node is reached initially
 	p := &rNode{
 		nd: start,
@@ -47,12 +49,11 @@ func AStarA(start, end EstimateNode) ([]EstimateNeighbor, float64) {
 	// r is a list of all nodes reached so far.
 	// the chain of nodes following the prev member represents the
 	// best path found so far from the start to this node.
-	r := map[EstimateNode]*rNode{start: p}
+	r := map[graph.EstimateNode]*rNode{start: p}
 	// oh is a heap of nodes "open" for exploration.  nodes go on the heap
 	// when they get an initial or new "g" path distance, and therefore a
 	// new "f" which serves as priority for exploration.
 	oh := openHeap{p}
-	var nbs []EstimateNeighbor // recycled slice
 	for len(oh) > 0 {
 		bestPath := heap.Pop(&oh).(*rNode)
 		bestNode := bestPath.nd
@@ -60,32 +61,32 @@ func AStarA(start, end EstimateNode) ([]EstimateNeighbor, float64) {
 			// done
 			dist := bestPath.g
 			i := bestPath.n
-			path := make([]EstimateNeighbor, i)
+			path := make([]graph.Neighbor, i)
 			for bestPath != nil {
 				i--
-				path[i] = EstimateNeighbor{bestPath.prevEdge, bestPath.nd}
+				path[i] = graph.Neighbor{bestPath.prevEdge, bestPath.nd}
 				bestPath = bestPath.prevNode
 			}
 			return path, dist
 		}
-		nbs := bestPath.nd.EstimateNeighbors(nbs[:0]) // recycle
-		for _, nb := range nbs {
-			nd := nb.EstimateNode
-			g := bestPath.g + nb.Distance()
+		bestNode.Visit(func(nb graph.Neighbor) {
+			nd := nb.Nd.(graph.EstimateNode)
+			ed := nb.Ed.(graph.DistanceEdge)
+			g := bestPath.g + ed.Distance()
 			if alt, reached := r[nd]; reached {
 				if g > alt.g {
 					// new path to nd is longer than some alternate path
-					continue
+					return
 				}
 				if g == alt.g && bestPath.n+1 >= alt.n {
 					// new path has identical length of some alternate path
 					// but it takes more hops.  go with fewest nodes in path.
-					continue
+					return
 				}
 				// cool, we found a better way to get to this node.
 				// update alt with new data and make sure it's on the heap.
 				alt.prevNode = bestPath
-				alt.prevEdge = nb.DistanceEdge
+				alt.prevEdge = ed
 				alt.g = g
 				alt.f = g + alt.nd.Estimate(end)
 				alt.n = bestPath.n + 1
@@ -99,7 +100,7 @@ func AStarA(start, end EstimateNode) ([]EstimateNeighbor, float64) {
 				p := &rNode{
 					nd:       nd,
 					prevNode: bestPath,
-					prevEdge: nb.DistanceEdge,
+					prevEdge: ed,
 					g:        g,
 					f:        g + start.Estimate(end),
 					n:        bestPath.n + 1,
@@ -107,12 +108,12 @@ func AStarA(start, end EstimateNode) ([]EstimateNeighbor, float64) {
 				r[nd] = p         // add to list of reached nodes
 				heap.Push(&oh, p) // and it's now open for exploration
 			}
-		}
+		})
 	}
 	return nil, math.Inf(1) // no path
 }
 
-func AStarM(start, end EstimateNode) ([]EstimateNeighbor, float64) {
+func AStarM(start, end graph.EstimateNode) ([]graph.Neighbor, float64) {
 	p := &rNode{
 		nd: start,
 		f:  start.Estimate(end),
@@ -124,11 +125,10 @@ func AStarM(start, end EstimateNode) ([]EstimateNeighbor, float64) {
 	// lists, open and closed. open contains nodes "open" for exploration.
 	// nodes are added to the list as they are reached, then moved to
 	// closed as they are found to be on the best path.
-	open := map[EstimateNode]*rNode{start: p}
-	closed := map[EstimateNode]struct{}{}
+	open := map[graph.EstimateNode]*rNode{start: p}
+	closed := map[graph.EstimateNode]struct{}{}
 
 	oh := openHeap{p}
-	var nbs []EstimateNeighbor // recycled slice
 	for len(oh) > 0 {
 		bestPath := heap.Pop(&oh).(*rNode)
 		bestNode := bestPath.nd
@@ -136,10 +136,10 @@ func AStarM(start, end EstimateNode) ([]EstimateNeighbor, float64) {
 			// done
 			dist := bestPath.g
 			i := bestPath.n
-			path := make([]EstimateNeighbor, i)
+			path := make([]graph.Neighbor, i)
 			for bestPath != nil {
 				i--
-				path[i] = EstimateNeighbor{bestPath.prevEdge, bestPath.nd}
+				path[i] = graph.Neighbor{bestPath.prevEdge, bestPath.nd}
 				bestPath = bestPath.prevNode
 			}
 			return path, dist
@@ -150,31 +150,31 @@ func AStarM(start, end EstimateNode) ([]EstimateNeighbor, float64) {
 		delete(open, bestNode)
 		closed[bestNode] = struct{}{}
 
-		nbs := bestPath.nd.EstimateNeighbors(nbs[:0]) // recycle
-		for _, nb := range nbs {
-			nd := nb.EstimateNode
+		bestNode.Visit(func(nb graph.Neighbor) {
+			nd := nb.Nd.(graph.EstimateNode)
+			ed := nb.Ed.(graph.DistanceEdge)
 
 			// difference from AStarA:
 			// Monotonicity means that f cannot be improved.
 			if _, ok := closed[nd]; ok {
-				continue
+				return
 			}
 
-			g := bestPath.g + nb.Distance()
+			g := bestPath.g + ed.Distance()
 			if alt, reached := open[nd]; reached {
 				if g > alt.g {
 					// new path to nd is longer than some alternate path
-					continue
+					return
 				}
 				if g == alt.g && bestPath.n+1 >= alt.n {
 					// new path has identical length of some alternate path
 					// but it takes more hops.  go with fewest nodes in path.
-					continue
+					return
 				}
 				// cool, we found a better way to get to this node.
 				// update alt with new data and reheap.
 				alt.prevNode = bestPath
-				alt.prevEdge = nb.DistanceEdge
+				alt.prevEdge = ed
 				alt.g = g
 				alt.f = g + alt.nd.Estimate(end)
 				alt.n = bestPath.n + 1
@@ -188,7 +188,7 @@ func AStarM(start, end EstimateNode) ([]EstimateNeighbor, float64) {
 				p := &rNode{
 					nd:       nd,
 					prevNode: bestPath,
-					prevEdge: nb.DistanceEdge,
+					prevEdge: ed,
 					g:        g,
 					f:        g + start.Estimate(end),
 					n:        bestPath.n + 1,
@@ -196,20 +196,20 @@ func AStarM(start, end EstimateNode) ([]EstimateNeighbor, float64) {
 				open[nd] = p      // new node is now open for exploration.
 				heap.Push(&oh, p) // keep heap matching open list.
 			}
-		}
+		})
 	}
 	return nil, math.Inf(1) // no path
 }
 
 // rNode holds data for a "reached" node
 type rNode struct {
-	nd       EstimateNode
-	prevNode *rNode       // chain encodes path back to start
-	prevEdge DistanceEdge // edge from prevNode to the node of this struct
-	g        float64      // "g" best known true path distance from start node
-	f        float64      // "g+h", path dist + heuristic estimate to end node
-	n        int          // number of nodes in path
-	rx       int          // heap.Remove index
+	nd       graph.EstimateNode
+	prevNode *rNode             // chain encodes path back to start
+	prevEdge graph.DistanceEdge // edge from prevNode to the node of this struct
+	g        float64            // "g" best known true path distance from start node
+	f        float64            // "g+h", path dist + heuristic estimate to end node
+	n        int                // number of nodes in path
+	rx       int                // heap.Remove index
 }
 
 type openHeap []*rNode

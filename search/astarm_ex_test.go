@@ -1,12 +1,13 @@
 // Copyright 2013 Sonia Keys
 // License MIT: http://opensource.org/licenses/MIT
 
-package graph_test
+package search_test
 
 import (
 	"fmt"
 
 	"github.com/soniakeys/graph"
+	"github.com/soniakeys/graph/search"
 )
 
 // The example contains an example graph representation and example data.
@@ -16,28 +17,30 @@ import (
 // to another node.  It represents directed edges from the node with the handy
 // EstimateNeighbor type from the graph package.
 type monoNode struct {
-	nbs  []graph.EstimateNeighbor // directed edges as EstimateNeighbors
-	name string                   // example application specific data
-	hEnd float64                  // heuristic distance estimate to end node
+	nbs  []graph.Neighbor // directed edges as EstimateNeighbors
+	name string           // example application specific data
+	hEnd float64          // heuristic distance estimate to end node
 }
 
 // monoNode implements graph.EstimateNode, also fmt.Stringer
-func (n *monoNode) EstimateNeighbors([]graph.EstimateNeighbor) []graph.EstimateNeighbor {
-	// validate monotonicity, for testing purposes
+func (n *monoNode) Visit(v graph.NeighborVisitor) {
 	for _, nb := range n.nbs {
-		if n.Estimate(monoEnd) > nb.Distance()+nb.Estimate(monoEnd) {
+		nEst := n.Estimate(monoEnd)
+		nbDist := nb.Ed.(graph.DistanceEdge).Distance()
+		nbEst := nb.Nd.(graph.EstimateNode).Estimate(monoEnd)
+		if nEst > nbDist+nbEst {
 			fmt.Printf(`non-monotonic:
 	%s estimate = %f
 	distance to %s = %f
 	%s estimate = %f
 	%f > %f + %f\n`,
-				n, n.Estimate(monoEnd),
-				nb.EstimateNode, nb.Distance(),
-				nb.EstimateNode, nb.Estimate(monoEnd),
-				n.Estimate(monoEnd), nb.Distance(), nb.Estimate(monoEnd))
+				n, nEst,
+				nb.Nd, nbDist,
+				nb.Nd, nbEst,
+				nEst, nbDist, nbEst)
 		}
+		v(nb)
 	}
-	return n.nbs
 }
 func (n *monoNode) Estimate(graph.EstimateNode) float64 { return n.hEnd }
 func (n *monoNode) String() string                      { return n.name }
@@ -56,14 +59,14 @@ var (
 		{"b", 3},
 		{"c", 4},
 		{"d", 0},
-/* WP example
+		/* WP example
 		{"a", 19},
 		{"b", 18},
 		{"c", 10},
 		{"d", 6},
 		{"e", 0},
 		{"f", 9},
-*/
+		*/
 	}
 	monoEdgeData = []struct {
 		v1, v2 string
@@ -74,7 +77,7 @@ var (
 		{"b", "d", 5},
 		{"c", "b", 3},
 		{"c", "d", 4},
-/* WP example
+		/* WP example
 		{"a", "b", 7},
 		{"a", "c", 9},
 		{"a", "f", 14},
@@ -84,7 +87,7 @@ var (
 		{"c", "f", 2},
 		{"d", "e", 6},
 		{"e", "f", 9},
-*/
+		*/
 	}
 )
 
@@ -101,8 +104,7 @@ func linkMonoGraph() {
 	// link neighbors
 	for _, ge := range monoEdgeData {
 		n1 := all[ge.v1]
-		n1.nbs = append(n1.nbs,
-			graph.EstimateNeighbor{monoEdge(ge.l), all[ge.v2]})
+		n1.nbs = append(n1.nbs, graph.Neighbor{monoEdge(ge.l), all[ge.v2]})
 	}
 	monoStart = all["a"]
 	monoEnd = all["d"]
@@ -115,7 +117,7 @@ func ExampleAStarM() {
 	fmt.Printf("Directed graph with %d nodes, %d edges\n",
 		len(monoNodeData), len(monoEdgeData))
 	// run AStarM
-	p, l := graph.AStarM(monoStart, monoEnd)
+	p, l := search.AStarM(monoStart, monoEnd)
 	if p == nil {
 		fmt.Println("No path from start node to end node")
 		return
@@ -123,21 +125,22 @@ func ExampleAStarM() {
 	// verify admissability
 	ap := 0.
 	for i := len(p) - 1; ; {
-		nd := p[i].EstimateNode
-		if nd.Estimate(monoEnd) > ap {
+		nd := p[i].Nd
+		nEst := nd.(graph.EstimateNode).Estimate(monoEnd)
+		if nEst > ap {
 			fmt.Printf(`inadmissable path:
 	Estimate from %s was %f
 	Actual path was %f
 	%f > %f\n`,
-				nd, nd.Estimate(monoEnd),
+				nd, nEst,
 				ap,
-				nd.Estimate(monoEnd), ap)
+				nEst, ap)
 			return
 		}
 		if i == 0 {
 			break
 		}
-		ap += p[i].Distance()
+		ap += p[i].Ed.(graph.DistanceEdge).Distance()
 		i--
 	}
 	// good.
@@ -148,5 +151,6 @@ func ExampleAStarM() {
 	// Shortest path: [{<nil> a} {3 c} {4 d}]
 	// Path length: 7
 }
-	// Shortest path: [{<nil> a} {9 c} {11 d} {6 e}]
-	// Path length: 26
+
+// Shortest path: [{<nil> a} {9 c} {11 d} {6 e}]
+// Path length: 26

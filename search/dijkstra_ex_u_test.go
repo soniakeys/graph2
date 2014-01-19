@@ -1,12 +1,13 @@
 // Copyright 2013 Sonia Keys
 // License MIT: http://opensource.org/licenses/MIT
 
-package graph_test
+package search_test
 
 import (
 	"fmt"
 
 	"github.com/soniakeys/graph"
+	"github.com/soniakeys/graph/search"
 )
 
 // uNode represents a node in an undirected graph.
@@ -19,19 +20,21 @@ type uNode struct {
 type uEdge struct {
 	n1, n2 *uNode  // each edge connects two nodes
 	dist   float64 // used to implement Distance method
-	// more application specific data could go here
+}
+
+func (e *uEdge) opp(n *uNode) *uNode {
+	if n == e.n1 {
+		return e.n2
+	}
+	return e.n1
 }
 
 // uNode implements graph.DistanceNode, also fmt.Stringer
-func (n *uNode) DistanceNeighbors(nbs []graph.DistanceNeighbor) []graph.DistanceNeighbor {
-	for _, e := range n.eds {
-		nb := graph.DistanceNeighbor{e, e.n1}
-		if nb.DistanceNode == n {
-			nb.DistanceNode = e.n2
-		}
-		nbs = append(nbs, nb)
+// dxNode implements graph.NeighborNode, also fmt.Stringer
+func (n *uNode) Visit(v graph.NeighborVisitor) {
+	for _, ed := range n.eds {
+		v(graph.Neighbor{ed, ed.opp(n)})
 	}
-	return nbs
 }
 func (n *uNode) String() string { return n.name }
 
@@ -87,15 +90,17 @@ func ExampleDijkstraShortestPath_undirected() {
 	// echo initial conditions
 	fmt.Printf("Undirected graph with %d nodes, %d edges\n", len(nd), len(ed))
 	// run Dijkstra's shortest path algorithm
-	p, l := graph.DijkstraShortestPath(startNode, endNode)
-	if p == nil {
+	ndPath, edPath, l := search.DijkstraShortestPath(startNode, endNode)
+	if ndPath == nil {
 		fmt.Println("No path from start node to end node")
 		return
 	}
-	fmt.Println("Shortest path:", p)
+	fmt.Println("Shortest path:", ndPath)
+	fmt.Println("Edge distances:", edPath)
 	fmt.Println("Path length:", l)
 	// Output:
 	// Undirected graph with 6 nodes, 9 edges
-	// Shortest path: [{<nil> a} {9 c} {2 f} {9 e}]
+	// Shortest path: [a c f e]
+	// Edge distances: [9 2 9]
 	// Path length: 20
 }
