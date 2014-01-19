@@ -17,15 +17,18 @@ import (
 // in the path, which must be non-negative.
 //
 // DistanceNode and DistanceEdge must be implemented as described in this
-// package documentation.  Arguments start and end must be nodes in a properly
-// connected graph.  The found shortest path is returned as a Distanceighbor
-// slice.  The first element of this slice will be the start node.  (The edge
-// member will be nil, as there is no edge that needs to be identified going to
-// the start node.)  Remaining elements give the found path of edges and nodes.
+// package documentation.  Distances must be non-negative and must not be an
+// Inf or NaN.  Arguments start and end must be nodes in a properly
+// connected graph.
+//
+// The found shortest path is returned as a graph.Neighbor slice.  The first
+// element of this slice will be the start node.  (The edge member will be nil,
+// as there is no edge that needs to be identified going to the start node.)
+// Remaining elements give the found path of edges and nodes.
 // Also returned is the total path length.  If the end node cannot be reached
 // from the start node, the returned neighbor list will be nil and the path
 // length +Inf.
-func DijkstraShortestPath(start, end graph.NeighborNode) ([]graph.NeighborNode, []graph.Edge, float64) {
+func DijkstraShortestPath(start, end graph.NeighborNode) ([]graph.Neighbor, float64) {
 	current := start
 	cd := dijkstra{tx: -1} // mark start done.  it skips the heap.
 	d := map[graph.NeighborNode]dijkstra{current: cd}
@@ -37,18 +40,15 @@ func DijkstraShortestPath(start, end graph.NeighborNode) ([]graph.NeighborNode, 
 			distance := ct.dist
 			// recover path by tracing prev links
 			i := ct.n
-			ndPath := make([]graph.NeighborNode, i)
-			i--
-			ndPath[i] = current
-			edPath := make([]graph.Edge, i)
+			path := make([]graph.Neighbor, i)
 			for i > 0 {
 				i--
+				path[i].Nd = current
 				nd := d[current]
-				edPath[i] = nd.prevEdge
+				path[i].Ed = nd.prevEdge
 				current = nd.prevNode
-				ndPath[i] = current
 			}
-			return ndPath, edPath, distance // success
+			return path, distance // success
 		}
 		current.Visit(func(nb graph.Neighbor) {
 			nd := d[nb.Nd]
@@ -95,7 +95,7 @@ func DijkstraShortestPath(start, end graph.NeighborNode) ([]graph.NeighborNode, 
 			}
 		})
 		if len(h.heap) == 0 {
-			return nil, nil, math.Inf(1) // failure. no more reachable nodes
+			return nil, math.Inf(1) // failure. no more reachable nodes
 		}
 		// new current is node with smallest tentative distance
 		ctx := heap.Pop(h).(int)

@@ -2,6 +2,7 @@
 // License MIT: http://opensource.org/licenses/MIT
 
 // Adj defines concrete types and methods for an adjacency graph.
+// The types can be used by functions of graph/search for example.
 package adj
 
 import (
@@ -34,7 +35,7 @@ func (n *Node) Estimate(e graph.EstimateNode) float64 {
 	return n.Data.(graph.Estimator).Estimate(e)
 }
 
-// String returns a printed representation of n.Data.
+// String returns a string representation of n.Data.
 func (n *Node) String() string { return fmt.Sprint(n.Data) }
 
 // Edge implements graph.DistanceEdge.
@@ -42,6 +43,9 @@ type Edge float64
 
 // Distance returns edge distance.
 func (e Edge) Distance() float64 { return float64(e) }
+
+// String returns a string representation of the edge distance.
+func (e Edge) String() string { return fmt.Sprint(float64(e)) }
 
 // Graph defines a simple representation for a set of Nodes.
 type Graph map[interface{}]*Node

@@ -13,15 +13,18 @@ import (
 // AStarA finds a path between two nodes.
 //
 // AStarA implements both algorithm A and algorithm A*.  The difference in the
-// two algorithms is strictly in the heuristic estimate, which is not here but
-// is provided by the caller, in code that implements EstimateNode.  If the
+// two algorithms is strictly in the heuristic estimate returned by Estimate().
+// Code for Estimate is not here but is provided by the caller.  If the
 // caller provides an "admissable" heuristic estimate, then the algorithm is
-// termed A*, otherwise it is algorithm A.
+// termed A*, otherwise it is algorithm A.  Admissable means the value returned
+// by Estimate (an estimated distance from some node to a destination node)
+// must be less than or equal to the actual shortest path distance from the
+// node to the destination node.
 //
 // Like DijkstraShortestPath, AStarA with an admissable heuristic finds the
-// shortest path between two nodes in a general directed or undirected graph.
-// The path length minimized is the sum of edge lengths in the path, which must
-// be non-negative.  It runs faster than Dijkstra though, by using node the
+// shortest path between two nodes in a general directed or undirected graph
+// with non-negative edge lengths.  Also edge lengths should not be Inf or NaN.
+// AStarA generally runs faster than Dijkstra though, by using node the
 // heuristic distance estimate.
 //
 // AStarA with an inadmissable heuristic becomes algorithm A.  Algorithm A
@@ -32,13 +35,15 @@ import (
 //
 // Two interfaces, EstimateNode and DistanceEdge, must be implemented as
 // described in this package documentation.  Arguments start and end must
-// be nodes in a properly connected graph.  The found shortest path is returned
-// as an EstimateNeighbor slice.  The first element of this slice will be the
-// start node.  (The edge member will be nil, as there is no edge that needs
-// to be identified going to the start node.)  Remaining elements give the
-// found path of edges and nodes.  Also returned is the total path length.
-// If the end node cannot be reached from the start node, the returned neighbor
-// list will be nil and the distance will be +Inf.
+// be nodes in a properly connected graph.
+//
+// The found path is returned as a graph.Neighbor slice.  The first
+// element of this slice will be the start node.  (The edge member will be nil,
+// as there is no edge that needs to be identified going to the start node.)
+// Remaining elements give the found path of edges and nodes.
+// Also returned is the total path length.  If the end node cannot be reached
+// from the start node, the returned neighbor list will be nil and the path
+// length +Inf.
 func AStarA(start, end graph.EstimateNode) ([]graph.Neighbor, float64) {
 	// start node is reached initially
 	p := &rNode{
@@ -62,7 +67,7 @@ func AStarA(start, end graph.EstimateNode) ([]graph.Neighbor, float64) {
 			dist := bestPath.g
 			i := bestPath.n
 			path := make([]graph.Neighbor, i)
-			for bestPath != nil {
+			for i > 0 {
 				i--
 				path[i] = graph.Neighbor{bestPath.prevEdge, bestPath.nd}
 				bestPath = bestPath.prevNode
@@ -113,6 +118,11 @@ func AStarA(start, end graph.EstimateNode) ([]graph.Neighbor, float64) {
 	return nil, math.Inf(1) // no path
 }
 
+// AStarM is A* optimized for monotonic estimates.
+//
+// An admissable estimate may further be monotonic.  Monotonic means that if
+// node B is a neighbor of node A with edge AB, then
+// A.Estimate(C) <= AB.Distance() + B.Estimate(C).
 func AStarM(start, end graph.EstimateNode) ([]graph.Neighbor, float64) {
 	p := &rNode{
 		nd: start,
@@ -206,8 +216,8 @@ type rNode struct {
 	nd       graph.EstimateNode
 	prevNode *rNode             // chain encodes path back to start
 	prevEdge graph.DistanceEdge // edge from prevNode to the node of this struct
-	g        float64            // "g" best known true path distance from start node
-	f        float64            // "g+h", path dist + heuristic estimate to end node
+	g        float64            // "g" best known path distance from start node
+	f        float64            // "g+h", path dist + heuristic estimate
 	n        int                // number of nodes in path
 	rx       int                // heap.Remove index
 }

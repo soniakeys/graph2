@@ -13,6 +13,4 @@
 // are generalized to be useful for other applications.
 //
 // Neither search nor adj depend on the other; they only depend on graph.
-// Example and test programs in each however show how to use the packages
-// together.
 package graph
