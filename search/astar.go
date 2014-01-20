@@ -33,9 +33,9 @@ import (
 // heuristic is likely to find a very good path, if not the best.  Quality
 // of the path returned degrades gracefully with the quality of the heuristic.
 //
-// Two interfaces, EstimateNode and DistanceEdge, must be implemented as
-// described in this package documentation.  Arguments start and end must
-// be nodes in a properly connected graph.
+// Arguments start and end must implement graph.EstimateNode.  Edges returned
+// from these objects must implement graph.DistanceEdge.  Distances must be
+// non-negative and must not be an Inf or NaN.
 //
 // The found path is returned as a graph.Neighbor slice.  The first
 // element of this slice will be the start node.  (The edge member will be nil,

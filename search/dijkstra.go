@@ -16,10 +16,9 @@ import (
 // undirected graph.  The path length minimized is the sum of edge lengths
 // in the path, which must be non-negative.
 //
-// DistanceNode and DistanceEdge must be implemented as described in this
-// package documentation.  Distances must be non-negative and must not be an
-// Inf or NaN.  Arguments start and end must be nodes in a properly
-// connected graph.
+// Arguements start and end must implement graph.NeighborNode.  Edges returned
+// from these objects must implement graph.DistanceEdge.  Distances must be
+// non-negative and must not be an Inf or NaN.
 //
 // The found shortest path is returned as a graph.Neighbor slice.  The first
 // element of this slice will be the start node.  (The edge member will be nil,
