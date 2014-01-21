@@ -161,3 +161,7 @@ func (h *tentHeap) Pop() interface{} {
 	h.heap = h.heap[:last]
 	return tx
 }
+
+func DijkstraAllPaths(start graph.Spanner) graph.NeighborNode {
+	return nil
+}
