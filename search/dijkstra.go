@@ -162,6 +162,75 @@ func (h *tentHeap) Pop() interface{} {
 	return tx
 }
 
-func DijkstraAllPaths(start graph.Spanner) graph.NeighborNode {
-	return nil
+func DijkstraAllPaths(start graph.SpannerNode) graph.NeighborNode {
+	// changes from DijkstraShortestPath:  A spanning tree node is created
+	// for an input node when the node is marked done.  Also dijkstra.prevNode
+	// is repurposed to point to the spanning tree node of the previous node.
+	// a leaf node of the growing spanning tree.
+	current := start
+	stRoot := start.LinkFrom(nil, nil)
+	cst := stRoot
+	cd := dijkstra{tx: -1} // mark start done.  it skips the heap.
+	d := map[graph.NeighborNode]dijkstra{current: cd}
+	ct := tentPath{n: 1} // path length 1 for start node
+	h := &tentHeap{
+		pool: make([]tentPath, 1)} // zero element unused
+	for {
+		current.Visit(func(nb graph.Neighbor) {
+			nd := d[nb.Nd]
+			if nd.tx < 0 {
+				return // skip nodes already done
+			}
+			dist := ct.dist + nb.Ed.(graph.DistanceEdge).Distance()
+			if nd.tx > 0 { // node already in tentative set
+				nt := &h.pool[nd.tx]
+				if dist >= nt.dist {
+					return // it's no help
+				}
+				// the path through current to this node is shorter than some
+				// other path to this node.  record new path data and reheap.
+				nt.dist = dist
+				nt.n = ct.n + 1
+				nd.prevNode = cst
+				nd.prevEdge = nb.Ed.(graph.DistanceEdge)
+				d[nb.Nd] = nd
+				heap.Fix(h, nt.rx)
+			} else { // nd.tx was zero. this is the first visit to this node.
+				// first find a place for tentPath data
+				if len(h.free) == 0 {
+					// nothing on the free list, extend the pool.
+					nd.tx = len(h.pool)
+					h.pool = append(h.pool, tentPath{
+						nd:   nb.Nd,
+						dist: dist,
+						n:    ct.n + 1})
+				} else { // reuse
+					last := len(h.free) - 1
+					nd.tx = h.free[last]
+					h.free = h.free[:last]
+					h.pool[nd.tx] = tentPath{
+						nd:   nb.Nd,
+						dist: dist,
+						n:    ct.n + 1}
+				}
+				// push path data to heap
+				nd.prevNode = cst
+				nd.prevEdge = nb.Ed.(graph.DistanceEdge)
+				d[nb.Nd] = nd
+				heap.Push(h, nd.tx)
+			}
+		})
+		if len(h.heap) == 0 {
+			return stRoot
+		}
+		// new current is node with smallest tentative distance
+		ctx := heap.Pop(h).(int)
+		ct = h.pool[ctx]
+		current = ct.nd.(graph.SpannerNode)
+		cd = d[current]
+		h.free = append(h.free, ctx) // recycle tentPath struct
+		cd.tx = -1                   // done
+		d[current] = cd              // store the -1
+		cst = current.LinkFrom(cd.prevNode, cd.prevEdge)
+	}
 }

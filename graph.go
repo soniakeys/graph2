@@ -44,8 +44,8 @@ type EstimateNode interface {
 	Estimator
 }
 
-// Spanner enables construction of a spanning tree.
-type Spanner interface {
+// SpannerNode enables construction of a spanning tree.
+type SpannerNode interface {
 	NeighborNode
 	// LinkFrom should construct a new node based on the reciever and
 	// construct a link based on ed that links prev to the new node.
