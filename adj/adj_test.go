@@ -25,7 +25,7 @@ func ExampleGraph_Link() {
 	g.Link(2, 3, nil)
 	g.Link(2, 1, nil)
 
-	// Buffer and sort output because maps are unordered.
+	// Just for this example, buffer and sort output because maps are unordered.
 	var output []string
 	for id, nd := range g {
 		// For each node, print the node.

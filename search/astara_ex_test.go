@@ -28,6 +28,7 @@ func ExampleAStarA() {
 	d := &aaData{"d", 6}
 	e := &aaData{"e", 0}
 	f := &aaData{"f", 9}
+	// use package graph/adj
 	g := adj.Graph{}
 	g.Link(a, b, adj.Edge(7))
 	g.Link(a, c, adj.Edge(9))
@@ -42,10 +43,6 @@ func ExampleAStarA() {
 	fmt.Println("Directed graph with", len(g), "nodes")
 	// run AStarA
 	p, l := search.AStarA(g[a], g[e])
-	if p == nil {
-		fmt.Println("No path from start node to end node")
-		return
-	}
 	fmt.Println("Shortest path:", p)
 	fmt.Println("Path length:", l)
 	// Output:

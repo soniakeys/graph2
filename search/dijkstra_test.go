@@ -30,10 +30,6 @@ func ExampleDijkstraShortestPath_directed() {
 	fmt.Println("Directed graph with", len(g), "nodes")
 	// run Dijkstra's shortest path algorithm
 	path, l := search.DijkstraShortestPath(g["a"], g["e"])
-	if path == nil {
-		fmt.Println(`No path from node "a" to node "e"`)
-		return
-	}
 	fmt.Println(`Shortest path from node "a" to node "e":`, path)
 	fmt.Println("Path length:", l)
 	// Output:
@@ -62,10 +58,6 @@ func ExampleDijkstraShortestPath_undirected() {
 	fmt.Println("Undirected graph with", len(g), "nodes")
 	// run Dijkstra's shortest path algorithm
 	path, l := search.DijkstraShortestPath(g["a"], g["e"])
-	if path == nil {
-		fmt.Println("No path from start node to end node")
-		return
-	}
 	fmt.Println("Shortest path:", path)
 	fmt.Println("Path length:", l)
 	// Output:
@@ -85,23 +77,18 @@ func ExampleDijkstraAllPaths() {
 	g.Link("c", "f", adj.Edge(2))
 	g.Link("d", "e", adj.Edge(6))
 	g.Link("e", "f", adj.Edge(9))
-	// run Dijkstra's shortest path algorithm
-	sp := search.DijkstraAllPaths(g["a"])
-	if sp == nil {
-		fmt.Println("sp nil")
-		return
-	}
 	// a recursive function to print paths
-	var pp func(string, *adj.Node)
-	pp = func(s string, n *adj.Node) {
-		s += fmt.Sprint(n.Data)
+	var pp func(string, graph.NeighborNode)
+	pp = func(s string, n graph.NeighborNode) {
+		s += fmt.Sprint(n)
 		fmt.Println(s)
 		s += " "
-		for _, nb := range n.Nbs {
-			pp(s, nb.Nd.(*adj.Node))
-		}
+		n.Visit(func(nb graph.Neighbor) {
+			pp(s, nb.Nd)
+		})
 	}
-	pp("", sp.(*adj.Node))
+	// run Dijkstra's algorithm to find all shortest paths
+	pp("", search.DijkstraAllPaths(g["a"]))
 	// Output:
 	// a
 	// a b

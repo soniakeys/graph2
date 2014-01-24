@@ -11,14 +11,14 @@ import (
 	"github.com/soniakeys/graph"
 )
 
-// Node represents a node in an adjacency graph.  It implements
-// graph.EstimateNode and fmt.Stringer.
+// Node represents a node in an adjacency graph.  It implements (for example)
+// graph.NeighborNode, graph.EstimateNode, graph.SpannerNode and fmt.Stringer.
 type Node struct {
-	Data interface{}      // application specific
-	Nbs  []graph.Neighbor // directed edges
+	Data interface{}
+	Nbs  []graph.Neighbor
 }
 
-// Visit visits neighbors of a node.
+// Visit visits neighbors of a Node.
 func (n *Node) Visit(v graph.NeighborVisitor) {
 	for _, nb := range n.Nbs {
 		v(nb)
@@ -53,7 +53,7 @@ type Graph map[interface{}]*Node
 // Link sets one Node of a Graph to be a neighbor of another, adding either
 // or both nodes to the graph as neccessary.
 //
-// N1 and n2 are used as node keys and are also assigned to the Data fields
+// N1 and n2 are used as map keys and are also assigned to the Data fields
 // when nodes are first added to the graph.  Because n1 and n2 are used as
 // map keys, their concrete types must be Go-comparable.  N1 and n2 may be
 // of any comparable type but if they will be used in a context that uses
@@ -75,6 +75,8 @@ func (g Graph) Link(n1, n2, ed interface{}) {
 	}
 }
 
+// LinkFrom lets Node satisfy graph.SpannerNode, to enable creation of a
+// spanning tree on top of a graph.
 func (n *Node) LinkFrom(prev graph.NeighborNode, ed graph.Edge) graph.NeighborNode {
 	rn := &Node{Data: n} // create new node referring to receiver.
 	if prev != nil {

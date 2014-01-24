@@ -13,12 +13,11 @@ import (
 // DijkstraShortestPath finds a shortest path between two nodes.
 //
 // It finds a shortest path between two nodes in a general directed or
-// undirected graph.  The path length minimized is the sum of edge lengths
-// in the path, which must be non-negative.
+// undirected graph.  The path length minimized is the sum of edge distances.
 //
-// Arguements start and end must implement graph.NeighborNode.  Edges returned
-// from these objects must implement graph.DistanceEdge.  Distances must be
-// non-negative and must not be an Inf or NaN.
+// Arguments start and end must implement graph.NeighborNode.  Edges connecting
+// nodes must implement graph.DistanceEdge.  Distances must be non-negative and
+// must not be an Inf or NaN.
 //
 // The found shortest path is returned as a graph.Neighbor slice.  The first
 // element of this slice will be the start node.  (The edge member will be nil,
@@ -28,83 +27,26 @@ import (
 // from the start node, the returned neighbor list will be nil and the path
 // length +Inf.
 func DijkstraShortestPath(start, end graph.NeighborNode) ([]graph.Neighbor, float64) {
-	current := start
-	cd := dijkstra{tx: -1} // mark start done.  it skips the heap.
-	d := map[graph.NeighborNode]dijkstra{current: cd}
-	ct := tentPath{n: 1} // path length 1 for start node
-	h := &tentHeap{
-		pool: make([]tentPath, 1)} // zero element unused
-	for {
-		if current == end { // search complete
-			distance := ct.dist
-			// recover path by tracing prev links
-			i := ct.n
-			path := make([]graph.Neighbor, i)
-			for i > 0 {
-				i--
-				path[i].Nd = current
-				nd := d[current]
-				path[i].Ed = nd.prevEdge
-				current = nd.prevNode
-			}
-			return path, distance // success
-		}
-		current.Visit(func(nb graph.Neighbor) {
-			nd := d[nb.Nd]
-			if nd.tx < 0 {
-				return // skip nodes already done
-			}
-			dist := ct.dist + nb.Ed.(graph.DistanceEdge).Distance()
-			if nd.tx > 0 { // node already in tentative set
-				nt := &h.pool[nd.tx]
-				if dist >= nt.dist {
-					return // it's no help
-				}
-				// the path through current to this node is shorter than some
-				// other path to this node.  record new path data and reheap.
-				nt.dist = dist
-				nt.n = ct.n + 1
-				nd.prevNode = current
-				nd.prevEdge = nb.Ed.(graph.DistanceEdge)
-				d[nb.Nd] = nd
-				heap.Fix(h, nt.rx)
-			} else { // nd.tx was zero. this is the first visit to this node.
-				// first find a place for tentPath data
-				if len(h.free) == 0 {
-					// nothing on the free list, extend the pool.
-					nd.tx = len(h.pool)
-					h.pool = append(h.pool, tentPath{
-						nd:   nb.Nd,
-						dist: dist,
-						n:    ct.n + 1})
-				} else { // reuse
-					last := len(h.free) - 1
-					nd.tx = h.free[last]
-					h.free = h.free[:last]
-					h.pool[nd.tx] = tentPath{
-						nd:   nb.Nd,
-						dist: dist,
-						n:    ct.n + 1}
-				}
-				// push path data to heap
-				nd.prevNode = current
-				nd.prevEdge = nb.Ed.(graph.DistanceEdge)
-				d[nb.Nd] = nd
-				heap.Push(h, nd.tx)
-			}
-		})
-		if len(h.heap) == 0 {
-			return nil, math.Inf(1) // failure. no more reachable nodes
-		}
-		// new current is node with smallest tentative distance
-		ctx := heap.Pop(h).(int)
-		ct = h.pool[ctx]
-		current = ct.nd
-		cd = d[current]
-		h.free = append(h.free, ctx) // recycle tentPath struct
-		cd.tx = -1                   // done
-		d[current] = cd              // store the -1
-	}
+	_, path, dist := djk(start, end, false)
+	return path, dist
+}
+
+// DijkstraAllPaths returns a spanning tree encoding the shortest paths
+// from the start node to all other nodes in a graph.
+//
+// Neighbor relationships between nodes can represent a general directed or
+// undirected graph.  The path length minimized is the sum of edge distances.
+//
+// Argument start must implement graph.SpannerNode.  Edges connecting nodes
+// must implement graph.DistanceEdge.  Distances must be non-negative and
+// must not be an Inf or NaN.
+//
+// The spanning tree is constructed by calling the LinkFrom method on the
+// nodes of the graph.  The root of the tree corresponds to start, and the
+// function returns this root.
+func DijkstraAllPaths(start graph.SpannerNode) graph.NeighborNode {
+	tree, _, _ := djk(start, nil, true)
+	return tree
 }
 
 // dijkstra holds data per node that is needed by the algorithm.  The
@@ -121,9 +63,13 @@ func DijkstraShortestPath(start, end graph.NeighborNode) ([]graph.Neighbor, floa
 // and prevNode and prevEdge are updated with will values representing the
 // shortest path from the start node.
 type dijkstra struct {
-	tx       int                // status/index of tentPath in pool that backs heap
-	prevNode graph.NeighborNode // path back to start
-	prevEdge graph.DistanceEdge // edge from prevNode to the node of this struct
+	// status/index of tentPath in pool that backs heap
+	tx int
+	// path back to start, either by nodes of the original graph or by
+	// nodes of the spanning tree under construction
+	prevNode graph.NeighborNode
+	// edge from prevNode to the node of this struct
+	prevEdge graph.DistanceEdge
 }
 
 // tentPath holds additional data for a node in the "tentative set".
@@ -162,20 +108,38 @@ func (h *tentHeap) Pop() interface{} {
 	return tx
 }
 
-func DijkstraAllPaths(start graph.SpannerNode) graph.NeighborNode {
-	// changes from DijkstraShortestPath:  A spanning tree node is created
-	// for an input node when the node is marked done.  Also dijkstra.prevNode
-	// is repurposed to point to the spanning tree node of the previous node.
-	// a leaf node of the growing spanning tree.
+func djk(start, end graph.NeighborNode, all bool) (graph.NeighborNode, []graph.Neighbor, float64) {
+	if start == nil {
+		return nil, nil, math.Inf(1)
+	}
 	current := start
-	stRoot := start.LinkFrom(nil, nil)
-	cst := stRoot
+	var stRoot, cr graph.NeighborNode
+	if all {
+		stRoot = start.(graph.SpannerNode).LinkFrom(nil, nil)
+		cr = stRoot
+	} else {
+		cr = current
+	}
 	cd := dijkstra{tx: -1} // mark start done.  it skips the heap.
 	d := map[graph.NeighborNode]dijkstra{current: cd}
 	ct := tentPath{n: 1} // path length 1 for start node
 	h := &tentHeap{
 		pool: make([]tentPath, 1)} // zero element unused
 	for {
+		if current == end { // single path search complete
+			distance := ct.dist
+			// recover path by tracing prev links
+			i := ct.n
+			path := make([]graph.Neighbor, i)
+			for i > 0 {
+				i--
+				path[i].Nd = current
+				nd := d[current]
+				path[i].Ed = nd.prevEdge
+				current = nd.prevNode
+			}
+			return nil, path, distance // success
+		}
 		current.Visit(func(nb graph.Neighbor) {
 			nd := d[nb.Nd]
 			if nd.tx < 0 {
@@ -191,7 +155,7 @@ func DijkstraAllPaths(start graph.SpannerNode) graph.NeighborNode {
 				// other path to this node.  record new path data and reheap.
 				nt.dist = dist
 				nt.n = ct.n + 1
-				nd.prevNode = cst
+				nd.prevNode = cr
 				nd.prevEdge = nb.Ed.(graph.DistanceEdge)
 				d[nb.Nd] = nd
 				heap.Fix(h, nt.rx)
@@ -214,23 +178,27 @@ func DijkstraAllPaths(start graph.SpannerNode) graph.NeighborNode {
 						n:    ct.n + 1}
 				}
 				// push path data to heap
-				nd.prevNode = cst
+				nd.prevNode = cr
 				nd.prevEdge = nb.Ed.(graph.DistanceEdge)
 				d[nb.Nd] = nd
 				heap.Push(h, nd.tx)
 			}
 		})
 		if len(h.heap) == 0 {
-			return stRoot
+			return stRoot, nil, math.Inf(1)
 		}
 		// new current is node with smallest tentative distance
 		ctx := heap.Pop(h).(int)
 		ct = h.pool[ctx]
-		current = ct.nd.(graph.SpannerNode)
+		current = ct.nd
 		cd = d[current]
 		h.free = append(h.free, ctx) // recycle tentPath struct
 		cd.tx = -1                   // done
 		d[current] = cd              // store the -1
-		cst = current.LinkFrom(cd.prevNode, cd.prevEdge)
+		if all {
+			cr = current.(graph.SpannerNode).LinkFrom(cd.prevNode, cd.prevEdge)
+		} else {
+			cr = current
+		}
 	}
 }

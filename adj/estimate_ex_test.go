@@ -10,7 +10,7 @@ import (
 // Define a type to use as Node.Data
 type est struct{}
 
-// The type must impliment graph.Estimator.
+// We will call Node.Estimate so we must impliment graph.Estimator.
 func (est) Estimate(graph.EstimateNode) float64 {
 	return 4
 }
