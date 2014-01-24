@@ -74,6 +74,43 @@ func ExampleDijkstraShortestPath_undirected() {
 	// Path length: 20
 }
 
+func ExampleDijkstraAllPaths() {
+	g := adj.Graph{}
+	g.Link("a", "b", adj.Edge(7))
+	g.Link("a", "c", adj.Edge(9))
+	g.Link("a", "f", adj.Edge(14))
+	g.Link("b", "c", adj.Edge(10))
+	g.Link("b", "d", adj.Edge(15))
+	g.Link("c", "d", adj.Edge(11))
+	g.Link("c", "f", adj.Edge(2))
+	g.Link("d", "e", adj.Edge(6))
+	g.Link("e", "f", adj.Edge(9))
+	// run Dijkstra's shortest path algorithm
+	sp := search.DijkstraAllPaths(g["a"])
+	if sp == nil {
+		fmt.Println("sp nil")
+		return
+	}
+	// a recursive function to print paths
+	var pp func(string, *adj.Node)
+	pp = func(s string, n *adj.Node) {
+		s += fmt.Sprint(n.Data)
+		fmt.Println(s)
+		s += " "
+		for _, nb := range n.Nbs {
+			pp(s, nb.Nd.(*adj.Node))
+		}
+	}
+	pp("", sp.(*adj.Node))
+	// Output:
+	// a
+	// a b
+	// a c
+	// a c f
+	// a c d
+	// a c d e
+}
+
 // minimal node type with no neighbors.
 type djNode0 struct{}
 

@@ -76,15 +76,14 @@ func (g Graph) Link(n1, n2, ed interface{}) {
 }
 
 func (n *Node) LinkFrom(prev graph.NeighborNode, ed graph.Edge) graph.NeighborNode {
-	pn, ok := prev.(*Node) // prev must be one of ours
-	if !ok {
-		return nil
-	}
 	rn := &Node{Data: n} // create new node referring to receiver.
-	nb := graph.Neighbor{Nd: rn}
-	if de, ok := ed.(graph.DistanceEdge); ok {
-		nb.Ed = Edge(de.Distance()) // create edge if meaningful
+	if prev != nil {
+		nb := graph.Neighbor{Nd: rn}
+		if de, ok := ed.(graph.DistanceEdge); ok {
+			nb.Ed = Edge(de.Distance()) // create edge if meaningful
+		}
+		pn := prev.(*Node)
+		pn.Nbs = append(pn.Nbs, nb)
 	}
-	pn.Nbs = append(pn.Nbs, nb)
 	return rn
 }
