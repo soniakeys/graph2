@@ -52,7 +52,7 @@ type EstimateNode interface {
 // nil arguments.  Subsequent calls pass a value previously returned by
 // LinkFrom as prev, and the connecting edge from the original graph as ed.
 //
-// Note that implentations of SpannerNode also determine the implentation
+// Note that implementations of SpannerNode also determine the implementation
 // of the NeighborNode returned by LinkFrom.  The two types need not be
 // the same.
 type SpannerNode interface {
