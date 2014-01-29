@@ -29,16 +29,16 @@ func ExampleAStarM() {
 	e := &amData{"e", 0}
 	f := &amData{"f", 9}
 	// use package graph/adj
-	g := adj.Graph{}
-	g.Link(a, b, adj.Edge(7))
-	g.Link(a, c, adj.Edge(9))
-	g.Link(a, f, adj.Edge(14))
-	g.Link(b, c, adj.Edge(10))
-	g.Link(b, d, adj.Edge(15))
-	g.Link(c, d, adj.Edge(11))
-	g.Link(c, f, adj.Edge(2))
-	g.Link(d, e, adj.Edge(6))
-	g.Link(e, f, adj.Edge(9))
+	g := adj.Digraph{}
+	g.Link(a, b, adj.Weighted(7))
+	g.Link(a, c, adj.Weighted(9))
+	g.Link(a, f, adj.Weighted(14))
+	g.Link(b, c, adj.Weighted(10))
+	g.Link(b, d, adj.Weighted(15))
+	g.Link(c, d, adj.Weighted(11))
+	g.Link(c, f, adj.Weighted(2))
+	g.Link(d, e, adj.Weighted(6))
+	g.Link(e, f, adj.Weighted(9))
 	// echo initial conditions
 	fmt.Println("Directed graph with", len(g), "nodes")
 	// run AStarA

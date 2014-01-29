@@ -16,16 +16,16 @@ import (
 )
 
 func ExampleDijkstraShortestPath_directed() {
-	g := adj.Graph{}
-	g.Link("a", "b", adj.Edge(7))
-	g.Link("a", "c", adj.Edge(9))
-	g.Link("a", "f", adj.Edge(14))
-	g.Link("b", "c", adj.Edge(10))
-	g.Link("b", "d", adj.Edge(15))
-	g.Link("c", "d", adj.Edge(11))
-	g.Link("c", "f", adj.Edge(2))
-	g.Link("d", "e", adj.Edge(6))
-	g.Link("e", "f", adj.Edge(9))
+	g := adj.Digraph{}
+	g.Link("a", "b", adj.Weighted(7))
+	g.Link("a", "c", adj.Weighted(9))
+	g.Link("a", "f", adj.Weighted(14))
+	g.Link("b", "c", adj.Weighted(10))
+	g.Link("b", "d", adj.Weighted(15))
+	g.Link("c", "d", adj.Weighted(11))
+	g.Link("c", "f", adj.Weighted(2))
+	g.Link("d", "e", adj.Weighted(6))
+	g.Link("e", "f", adj.Weighted(9))
 	// echo initial conditions
 	fmt.Println("Directed graph with", len(g), "nodes")
 	// run Dijkstra's shortest path algorithm
@@ -39,25 +39,20 @@ func ExampleDijkstraShortestPath_directed() {
 }
 
 func ExampleDijkstraShortestPath_undirected() {
-	g := adj.Graph{}
-	link := func(n1, n2 string, dist float64) {
-		ed := adj.Edge(dist)
-		g.Link(n1, n2, &ed)
-		g.Link(n2, n1, &ed)
-	}
-	link("a", "b", 7)
-	link("a", "c", 9)
-	link("a", "f", 14)
-	link("b", "c", 10)
-	link("b", "d", 15)
-	link("c", "d", 11)
-	link("c", "f", 2)
-	link("d", "e", 6)
-	link("e", "f", 9)
+	g := adj.NewGraph()
+	g.Link("a", "b", adj.Weighted(7))
+	g.Link("a", "c", adj.Weighted(9))
+	g.Link("a", "f", adj.Weighted(14))
+	g.Link("b", "c", adj.Weighted(10))
+	g.Link("b", "d", adj.Weighted(15))
+	g.Link("c", "d", adj.Weighted(11))
+	g.Link("c", "f", adj.Weighted(2))
+	g.Link("d", "e", adj.Weighted(6))
+	g.Link("e", "f", adj.Weighted(9))
 	// echo initial conditions
-	fmt.Println("Undirected graph with", len(g), "nodes")
+	fmt.Println("Undirected graph with", len(g.Nodes), "nodes")
 	// run Dijkstra's shortest path algorithm
-	path, l := search.DijkstraShortestPath(g["a"], g["e"])
+	path, l := search.DijkstraShortestPath(g.Nodes["a"], g.Nodes["e"])
 	fmt.Println("Shortest path:", path)
 	fmt.Println("Path length:", l)
 	// Output:
@@ -67,16 +62,16 @@ func ExampleDijkstraShortestPath_undirected() {
 }
 
 func ExampleDijkstraAllPaths() {
-	g := adj.Graph{}
-	g.Link("a", "b", adj.Edge(7))
-	g.Link("a", "c", adj.Edge(9))
-	g.Link("a", "f", adj.Edge(14))
-	g.Link("b", "c", adj.Edge(10))
-	g.Link("b", "d", adj.Edge(15))
-	g.Link("c", "d", adj.Edge(11))
-	g.Link("c", "f", adj.Edge(2))
-	g.Link("d", "e", adj.Edge(6))
-	g.Link("e", "f", adj.Edge(9))
+	g := adj.Digraph{}
+	g.Link("a", "b", adj.Weighted(7))
+	g.Link("a", "c", adj.Weighted(9))
+	g.Link("a", "f", adj.Weighted(14))
+	g.Link("b", "c", adj.Weighted(10))
+	g.Link("b", "d", adj.Weighted(15))
+	g.Link("c", "d", adj.Weighted(11))
+	g.Link("c", "f", adj.Weighted(2))
+	g.Link("d", "e", adj.Weighted(6))
+	g.Link("e", "f", adj.Weighted(9))
 	// a recursive function to print paths
 	var pp func(string, graph.NeighborNode)
 	pp = func(s string, n graph.NeighborNode) {
@@ -119,23 +114,23 @@ func TestDijkstraDirected(t *testing.T) {
 type stNode struct {
 	name string
 	x, y float64
-	nbs  []stEdge
+	nbs  []stArc
 }
 
-type stEdge struct {
-	length float64
+type stArc struct {
+	weight float64
 	to     *stNode
 }
 
 func (n *stNode) Visit(v graph.NeighborVisitor) {
-	for _, e := range n.nbs {
-		v(graph.Neighbor{e, e.to})
+	for _, a := range n.nbs {
+		v(graph.Neighbor{a, a.to})
 	}
 }
 
 func (n *stNode) String() string { return n.name }
 
-func (e stEdge) Distance() float64 { return float64(e.length) }
+func (a stArc) Weight() float64 { return float64(a.weight) }
 
 type xyList []stNode
 
@@ -144,7 +139,7 @@ func (l xyList) Less(i, j int) bool { return l[i].name < l[j].name }
 func (l xyList) Swap(i, j int)      { l[i], l[j] = l[j], l[i] }
 
 // generate a random graph
-func r(nNodes, nEdges int) (start, end *stNode) {
+func r(nNodes, nArcs int) (start, end *stNode) {
 	s := rand.New(rand.NewSource(59))
 	// generate unique node names
 	nameMap := map[string]bool{}
@@ -169,14 +164,14 @@ func r(nNodes, nEdges int) (start, end *stNode) {
 		nodes[i].y = s.Float64()
 	}
 	// generate edges.
-	for i := 0; i < nEdges; {
+	for i := 0; i < nArcs; {
 		n1 := &nodes[s.Intn(nNodes)]
 		n2 := &nodes[s.Intn(nNodes)]
 		dist := math.Hypot(n2.x-n1.x, n2.y-n1.y)
 		if dist > s.Float64()*math.Sqrt2 {
 			continue
 		}
-		n1.nbs = append(n1.nbs, stEdge{dist, n2})
+		n1.nbs = append(n1.nbs, stArc{dist, n2})
 		switch i {
 		case 0:
 			start = n1

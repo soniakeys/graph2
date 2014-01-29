@@ -8,19 +8,19 @@ import (
 	"github.com/soniakeys/graph/adj"
 )
 
-func ExampleEdge_Distance() {
-	// Example shows that adj.Edge implements graph.DistanceEdge.
-	var e graph.DistanceEdge
-	e = adj.Edge(4)
-	fmt.Println(e.Distance())
+func ExampleWeighted_Weight() {
+	// Example shows that adj.Weighted implements graph.Weighted.
+	var a graph.Weighted
+	a = adj.Weighted(4)
+	fmt.Println(a.Weight())
 	// Output:
 	// 4
 }
 
-func ExampleGraph_Link() {
-	g := adj.Graph{}
+func ExampleDigraph_Link() {
+	g := adj.Digraph{}
 
-	// As a minimimal example, use ints for nodes and don't use edges at all.
+	// As a minimimal example, use ints for nodes and don't use arcs at all.
 	g.Link(1, 2, nil)
 	g.Link(2, 3, nil)
 	g.Link(2, 1, nil)

@@ -18,7 +18,7 @@
 //
 // An admissable estimate may further be monotonic.  Monotonic means that if
 // node B is a neighbor of node A with edge AB, then the estimate from A
-// must be less than or equal to the edge distance AB plus the estimate from
+// must be less than or equal to the edge weight AB plus the estimate from
 // B.  The package has a separate function optimized for monotonic graphs.
 //
 // Search requires Go 1.2.

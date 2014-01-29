@@ -34,7 +34,7 @@ import (
 // of the path returned degrades gracefully with the quality of the heuristic.
 //
 // Arguments start and end must implement graph.EstimateNode.  Edges returned
-// from these objects must implement graph.DistanceEdge.  Distances must be
+// from these objects must implement graph.Weighted.  Weights must be
 // non-negative and must not be an Inf or NaN.
 //
 // The found path is returned as a graph.Neighbor slice.  The first
@@ -76,8 +76,8 @@ func AStarA(start, end graph.EstimateNode) ([]graph.Neighbor, float64) {
 		}
 		bestNode.Visit(func(nb graph.Neighbor) {
 			nd := nb.Nd.(graph.EstimateNode)
-			ed := nb.Ed.(graph.DistanceEdge)
-			g := bestPath.g + ed.Distance()
+			ed := nb.Ed.(graph.Weighted)
+			g := bestPath.g + ed.Weight()
 			if alt, reached := r[nd]; reached {
 				if g > alt.g {
 					// new path to nd is longer than some alternate path
@@ -122,7 +122,7 @@ func AStarA(start, end graph.EstimateNode) ([]graph.Neighbor, float64) {
 //
 // An admissable estimate may further be monotonic.  Monotonic means that if
 // node B is a neighbor of node A with edge AB, then
-// A.Estimate(C) <= AB.Distance() + B.Estimate(C).
+// A.Estimate(C) <= AB.Weight() + B.Estimate(C).
 func AStarM(start, end graph.EstimateNode) ([]graph.Neighbor, float64) {
 	p := &rNode{
 		nd: start,
@@ -162,7 +162,7 @@ func AStarM(start, end graph.EstimateNode) ([]graph.Neighbor, float64) {
 
 		bestNode.Visit(func(nb graph.Neighbor) {
 			nd := nb.Nd.(graph.EstimateNode)
-			ed := nb.Ed.(graph.DistanceEdge)
+			ed := nb.Ed.(graph.Weighted)
 
 			// difference from AStarA:
 			// Monotonicity means that f cannot be improved.
@@ -170,7 +170,7 @@ func AStarM(start, end graph.EstimateNode) ([]graph.Neighbor, float64) {
 				return
 			}
 
-			g := bestPath.g + ed.Distance()
+			g := bestPath.g + ed.Weight()
 			if alt, reached := open[nd]; reached {
 				if g > alt.g {
 					// new path to nd is longer than some alternate path
@@ -214,12 +214,12 @@ func AStarM(start, end graph.EstimateNode) ([]graph.Neighbor, float64) {
 // rNode holds data for a "reached" node
 type rNode struct {
 	nd       graph.EstimateNode
-	prevNode *rNode             // chain encodes path back to start
-	prevEdge graph.DistanceEdge // edge from prevNode to the node of this struct
-	g        float64            // "g" best known path distance from start node
-	f        float64            // "g+h", path dist + heuristic estimate
-	n        int                // number of nodes in path
-	rx       int                // heap.Remove index
+	prevNode *rNode         // chain encodes path back to start
+	prevEdge graph.Weighted // edge from prevNode to the node of this struct
+	g        float64        // "g" best known path distance from start node
+	f        float64        // "g+h", path dist + heuristic estimate
+	n        int            // number of nodes in path
+	rx       int            // heap.Remove index
 }
 
 type openHeap []*rNode

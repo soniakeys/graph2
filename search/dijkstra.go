@@ -13,10 +13,10 @@ import (
 // DijkstraShortestPath finds a shortest path between two nodes.
 //
 // It finds a shortest path between two nodes in a general directed or
-// undirected graph.  The path length minimized is the sum of edge distances.
+// undirected graph.  The path length minimized is the sum of edge weights.
 //
 // Arguments start and end must implement graph.NeighborNode.  Edges connecting
-// nodes must implement graph.DistanceEdge.  Distances must be non-negative and
+// nodes must implement graph.Weighted.  Weights must be non-negative and
 // must not be an Inf or NaN.
 //
 // The found shortest path is returned as a graph.Neighbor slice.  The first
@@ -31,20 +31,21 @@ func DijkstraShortestPath(start, end graph.NeighborNode) ([]graph.Neighbor, floa
 	return path, dist
 }
 
-// DijkstraAllPaths returns a spanning tree encoding the shortest paths
-// from the start node to all other nodes in a graph.
+// DijkstraAllPaths returns an arborescence, or directed spanning tree,
+// encoding the shortest paths from the start node to all other nodes
+// in a graph.
 //
 // Neighbor relationships between nodes can represent a general directed or
-// undirected graph.  The path length minimized is the sum of edge distances.
+// undirected graph.  The path length minimized is the sum of edge weights.
 //
-// Argument start must implement graph.SpannerNode.  Edges connecting nodes
-// must implement graph.DistanceEdge.  Distances must be non-negative and
+// Argument start must implement graph.ArborNode.  Edges connecting nodes
+// must implement graph.Weighted.  Weights must be non-negative and
 // must not be an Inf or NaN.
 //
-// The spanning tree is constructed by calling the LinkFrom method on the
+// The arborescence is constructed by calling the LinkFrom method on the
 // nodes of the graph.  The root of the tree corresponds to start, and the
 // function returns this root.
-func DijkstraAllPaths(start graph.SpannerNode) graph.NeighborNode {
+func DijkstraAllPaths(start graph.ArborNode) graph.NeighborNode {
 	tree, _, _ := djk(start, nil, true)
 	return tree
 }
@@ -66,10 +67,10 @@ type dijkstra struct {
 	// status/index of tentPath in pool that backs heap
 	tx int
 	// path back to start, either by nodes of the original graph or by
-	// nodes of the spanning tree under construction
+	// nodes of the arborescence under construction
 	prevNode graph.NeighborNode
 	// edge from prevNode to the node of this struct
-	prevEdge graph.DistanceEdge
+	prevEdge graph.Weighted
 }
 
 // tentPath holds additional data for a node in the "tentative set".
@@ -115,7 +116,7 @@ func djk(start, end graph.NeighborNode, all bool) (graph.NeighborNode, []graph.N
 	current := start
 	var stRoot, cr graph.NeighborNode
 	if all {
-		stRoot = start.(graph.SpannerNode).LinkFrom(nil, nil)
+		stRoot = start.(graph.ArborNode).LinkFrom(nil, nil)
 		cr = stRoot
 	} else {
 		cr = current
@@ -145,7 +146,7 @@ func djk(start, end graph.NeighborNode, all bool) (graph.NeighborNode, []graph.N
 			if nd.tx < 0 {
 				return // skip nodes already done
 			}
-			dist := ct.dist + nb.Ed.(graph.DistanceEdge).Distance()
+			dist := ct.dist + nb.Ed.(graph.Weighted).Weight()
 			if nd.tx > 0 { // node already in tentative set
 				nt := &h.pool[nd.tx]
 				if dist >= nt.dist {
@@ -156,7 +157,7 @@ func djk(start, end graph.NeighborNode, all bool) (graph.NeighborNode, []graph.N
 				nt.dist = dist
 				nt.n = ct.n + 1
 				nd.prevNode = cr
-				nd.prevEdge = nb.Ed.(graph.DistanceEdge)
+				nd.prevEdge = nb.Ed.(graph.Weighted)
 				d[nb.Nd] = nd
 				heap.Fix(h, nt.rx)
 			} else { // nd.tx was zero. this is the first visit to this node.
@@ -179,7 +180,7 @@ func djk(start, end graph.NeighborNode, all bool) (graph.NeighborNode, []graph.N
 				}
 				// push path data to heap
 				nd.prevNode = cr
-				nd.prevEdge = nb.Ed.(graph.DistanceEdge)
+				nd.prevEdge = nb.Ed.(graph.Weighted)
 				d[nb.Nd] = nd
 				heap.Push(h, nd.tx)
 			}
@@ -196,7 +197,7 @@ func djk(start, end graph.NeighborNode, all bool) (graph.NeighborNode, []graph.N
 		cd.tx = -1                   // done
 		d[current] = cd              // store the -1
 		if all {
-			cr = current.(graph.SpannerNode).LinkFrom(cd.prevNode, cd.prevEdge)
+			cr = current.(graph.ArborNode).LinkFrom(cd.prevNode, cd.prevEdge)
 		} else {
 			cr = current
 		}
