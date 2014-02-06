@@ -73,12 +73,12 @@ func ExampleDijkstraAllPaths() {
 	g.Link("d", "e", adj.Weighted(6))
 	g.Link("e", "f", adj.Weighted(9))
 	// a recursive function to print paths
-	var pp func(string, graph.NeighborNode)
-	pp = func(s string, n graph.NeighborNode) {
+	var pp func(string, graph.AdjNode)
+	pp = func(s string, n graph.AdjNode) {
 		s += fmt.Sprint(n)
 		fmt.Println(s)
 		s += " "
-		n.Visit(func(nb graph.Neighbor) {
+		n.Visit(func(nb graph.Adj) {
 			pp(s, nb.Nd)
 		})
 	}
@@ -93,14 +93,14 @@ func ExampleDijkstraAllPaths() {
 	// a c d e
 }
 
-// minimal node type with no neighbors.
+// minimal node type with no adjacency representation.
 type djNode0 struct{}
 
-func (n *djNode0) Visit(graph.NeighborVisitor) {
+func (n *djNode0) Visit(graph.AdjVisitor) {
 }
 
 func TestDijkstraDirected(t *testing.T) {
-	// search from node with no neighbors to something other than itself
+	// search from an isolated node to something other than itself
 	// should return no path.
 	p, l := search.DijkstraShortestPath(&djNode0{}, nil)
 	if p != nil {
@@ -122,9 +122,9 @@ type stArc struct {
 	to     *stNode
 }
 
-func (n *stNode) Visit(v graph.NeighborVisitor) {
+func (n *stNode) Visit(v graph.AdjVisitor) {
 	for _, a := range n.nbs {
-		v(graph.Neighbor{a, a.to})
+		v(graph.Adj{a, a.to})
 	}
 }
 

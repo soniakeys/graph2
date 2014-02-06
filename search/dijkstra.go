@@ -15,18 +15,18 @@ import (
 // It finds a shortest path between two nodes in a general directed or
 // undirected graph.  The path length minimized is the sum of edge weights.
 //
-// Arguments start and end must implement graph.NeighborNode.  Edges connecting
+// Arguments start and end must implement graph.AdjNode.  Edges connecting
 // nodes must implement graph.Weighted.  Weights must be non-negative and
 // must not be an Inf or NaN.
 //
-// The found shortest path is returned as a graph.Neighbor slice.  The first
+// The found shortest path is returned as a graph.Adj slice.  The first
 // element of this slice will be the start node.  (The edge member will be nil,
 // as there is no edge that needs to be identified going to the start node.)
 // Remaining elements give the found path of edges and nodes.
 // Also returned is the total path length.  If the end node cannot be reached
-// from the start node, the returned neighbor list will be nil and the path
+// from the start node, the returned Adj list will be nil and the path
 // length +Inf.
-func DijkstraShortestPath(start, end graph.NeighborNode) ([]graph.Neighbor, float64) {
+func DijkstraShortestPath(start, end graph.AdjNode) ([]graph.Adj, float64) {
 	_, path, dist := djk(start, end, false)
 	return path, dist
 }
@@ -35,7 +35,7 @@ func DijkstraShortestPath(start, end graph.NeighborNode) ([]graph.Neighbor, floa
 // encoding the shortest paths from the start node to all other nodes
 // in a graph.
 //
-// Neighbor relationships between nodes can represent a general directed or
+// Adj relationships between nodes can represent a general directed or
 // undirected graph.  The path length minimized is the sum of edge weights.
 //
 // Argument start must implement graph.ArborNode.  Edges connecting nodes
@@ -45,7 +45,7 @@ func DijkstraShortestPath(start, end graph.NeighborNode) ([]graph.Neighbor, floa
 // The arborescence is constructed by calling the LinkFrom method on the
 // nodes of the graph.  The root of the tree corresponds to start, and the
 // function returns this root.
-func DijkstraAllPaths(start graph.ArborNode) graph.NeighborNode {
+func DijkstraAllPaths(start graph.ArborNode) graph.AdjNode {
 	tree, _, _ := djk(start, nil, true)
 	return tree
 }
@@ -68,7 +68,7 @@ type dijkstra struct {
 	tx int
 	// path back to start, either by nodes of the original graph or by
 	// nodes of the arborescence under construction
-	prevNode graph.NeighborNode
+	prevNode graph.AdjNode
 	// edge from prevNode to the node of this struct
 	prevEdge graph.Weighted
 }
@@ -78,7 +78,7 @@ type tentPath struct {
 	dist float64 // tentative path distance
 	n    int     // number of nodes in path
 	rx   int     // heap.Remove index
-	nd   graph.NeighborNode
+	nd   graph.AdjNode
 }
 
 type tentHeap struct {
@@ -109,12 +109,12 @@ func (h *tentHeap) Pop() interface{} {
 	return tx
 }
 
-func djk(start, end graph.NeighborNode, all bool) (graph.NeighborNode, []graph.Neighbor, float64) {
+func djk(start, end graph.AdjNode, all bool) (graph.AdjNode, []graph.Adj, float64) {
 	if start == nil {
 		return nil, nil, math.Inf(1)
 	}
 	current := start
-	var stRoot, cr graph.NeighborNode
+	var stRoot, cr graph.AdjNode
 	if all {
 		stRoot = start.(graph.ArborNode).LinkFrom(nil, nil)
 		cr = stRoot
@@ -122,7 +122,7 @@ func djk(start, end graph.NeighborNode, all bool) (graph.NeighborNode, []graph.N
 		cr = current
 	}
 	cd := dijkstra{tx: -1} // mark start done.  it skips the heap.
-	d := map[graph.NeighborNode]dijkstra{current: cd}
+	d := map[graph.AdjNode]dijkstra{current: cd}
 	ct := tentPath{n: 1} // path length 1 for start node
 	h := &tentHeap{
 		pool: make([]tentPath, 1)} // zero element unused
@@ -131,7 +131,7 @@ func djk(start, end graph.NeighborNode, all bool) (graph.NeighborNode, []graph.N
 			distance := ct.dist
 			// recover path by tracing prev links
 			i := ct.n
-			path := make([]graph.Neighbor, i)
+			path := make([]graph.Adj, i)
 			for i > 0 {
 				i--
 				path[i].Nd = current
@@ -141,12 +141,12 @@ func djk(start, end graph.NeighborNode, all bool) (graph.NeighborNode, []graph.N
 			}
 			return nil, path, distance // success
 		}
-		current.Visit(func(nb graph.Neighbor) {
-			nd := d[nb.Nd]
+		current.Visit(func(a graph.Adj) {
+			nd := d[a.Nd]
 			if nd.tx < 0 {
 				return // skip nodes already done
 			}
-			dist := ct.dist + nb.Ed.(graph.Weighted).Weight()
+			dist := ct.dist + a.Ed.(graph.Weighted).Weight()
 			if nd.tx > 0 { // node already in tentative set
 				nt := &h.pool[nd.tx]
 				if dist >= nt.dist {
@@ -157,8 +157,8 @@ func djk(start, end graph.NeighborNode, all bool) (graph.NeighborNode, []graph.N
 				nt.dist = dist
 				nt.n = ct.n + 1
 				nd.prevNode = cr
-				nd.prevEdge = nb.Ed.(graph.Weighted)
-				d[nb.Nd] = nd
+				nd.prevEdge = a.Ed.(graph.Weighted)
+				d[a.Nd] = nd
 				heap.Fix(h, nt.rx)
 			} else { // nd.tx was zero. this is the first visit to this node.
 				// first find a place for tentPath data
@@ -166,7 +166,7 @@ func djk(start, end graph.NeighborNode, all bool) (graph.NeighborNode, []graph.N
 					// nothing on the free list, extend the pool.
 					nd.tx = len(h.pool)
 					h.pool = append(h.pool, tentPath{
-						nd:   nb.Nd,
+						nd:   a.Nd,
 						dist: dist,
 						n:    ct.n + 1})
 				} else { // reuse
@@ -174,14 +174,14 @@ func djk(start, end graph.NeighborNode, all bool) (graph.NeighborNode, []graph.N
 					nd.tx = h.free[last]
 					h.free = h.free[:last]
 					h.pool[nd.tx] = tentPath{
-						nd:   nb.Nd,
+						nd:   a.Nd,
 						dist: dist,
 						n:    ct.n + 1}
 				}
 				// push path data to heap
 				nd.prevNode = cr
-				nd.prevEdge = nb.Ed.(graph.Weighted)
-				d[nb.Nd] = nd
+				nd.prevEdge = a.Ed.(graph.Weighted)
+				d[a.Nd] = nd
 				heap.Push(h, nd.tx)
 			}
 		})

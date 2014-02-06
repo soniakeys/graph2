@@ -3,23 +3,24 @@
 
 package graph
 
-// A NeighborNode has some way of visiting its neighbors.
-//
-// Visit should call the NeighborVisitor function for each neighbor
-// of the receiver.
-type NeighborNode interface {
-	Visit(NeighborVisitor)
+// An AdjNode represents how it is adjacent to other nodes.
+type AdjNode interface {
+	// Visit should call the AdjVisitor function for each adjacent "neighbor"
+	// of the receiver.
+	Visit(AdjVisitor)
 }
 
-// An algorithm can process neighbors of a NeighborNode by passing a
-// NeighborVisitor to NeigborNode.Visit.
-type NeighborVisitor func(Neighbor)
+// AdjVistor is the argument type for AdjNode.Visit.
+type AdjVisitor func(Adj)
 
-// Neighbor associates an arc or edge with the node that is reached by the
-// arc or edge.
-type Neighbor struct {
+// Adj associates an arc or edge with the node that is reached by the
+// arc or edge.  For a directed graph, an adjacent is an arc leading
+// from the node and the node at the end of the arc.  For an undirected
+// graph, an adjacent is an edge touching the node and the node on the
+// other end of the edge.
+type Adj struct {
 	Ed interface{} // arc or edge
-	Nd NeighborNode
+	Nd AdjNode
 }
 
 // Arc and Edge are completely generic to hold any object but are separate
@@ -45,7 +46,7 @@ type Estimator interface {
 // EstimateNode describes a node that can provide a distance estimate
 // to another EstimateNode.
 type EstimateNode interface {
-	NeighborNode
+	AdjNode
 	Estimator
 }
 
@@ -60,13 +61,13 @@ type EstimateNode interface {
 // the original graph as arc.
 //
 // Note that implementations of ArborNode also determine the implementation
-// of the NeighborNode returned by LinkFrom.  The two types need not be
+// of the AdjNode returned by LinkFrom.  The two types need not be
 // the same.
 type ArborNode interface {
-	NeighborNode
+	AdjNode
 	// LinkFrom should construct a new node based on the reciever and
 	// construct a link based on arc that links prev to the new node.
-	LinkFrom(prev NeighborNode, arc Arc) NeighborNode
+	LinkFrom(prev AdjNode, arc Arc) AdjNode
 }
 
 // SpannerNode enables construction of a spanning tree.
@@ -78,10 +79,10 @@ type ArborNode interface {
 // Span as prev, and the connecting edge from the original graph as ed.
 //
 // Note that implementations of SpannerNode also determine the implementation
-// of the NeighborNode returned by Span.  The two types need not be the same.
+// of the AdjNode returned by Span.  The two types need not be the same.
 type SpannerNode interface {
-	NeighborNode
+	AdjNode
 	// Span should construct a new node based on the reciever and
 	// construct a link based on ed that links prev to the new node.
-	Span(prev NeighborNode, ed Edge) NeighborNode
+	Span(prev AdjNode, ed Edge) AdjNode
 }

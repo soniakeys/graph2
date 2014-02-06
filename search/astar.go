@@ -37,14 +37,14 @@ import (
 // from these objects must implement graph.Weighted.  Weights must be
 // non-negative and must not be an Inf or NaN.
 //
-// The found path is returned as a graph.Neighbor slice.  The first
+// The found path is returned as a graph.Adj slice.  The first
 // element of this slice will be the start node.  (The edge member will be nil,
 // as there is no edge that needs to be identified going to the start node.)
 // Remaining elements give the found path of edges and nodes.
 // Also returned is the total path length.  If the end node cannot be reached
-// from the start node, the returned neighbor list will be nil and the path
+// from the start node, the returned Adj list will be nil and the path
 // length +Inf.
-func AStarA(start, end graph.EstimateNode) ([]graph.Neighbor, float64) {
+func AStarA(start, end graph.EstimateNode) ([]graph.Adj, float64) {
 	// start node is reached initially
 	p := &rNode{
 		nd: start,
@@ -66,15 +66,15 @@ func AStarA(start, end graph.EstimateNode) ([]graph.Neighbor, float64) {
 			// done
 			dist := bestPath.g
 			i := bestPath.n
-			path := make([]graph.Neighbor, i)
+			path := make([]graph.Adj, i)
 			for i > 0 {
 				i--
-				path[i] = graph.Neighbor{bestPath.prevEdge, bestPath.nd}
+				path[i] = graph.Adj{bestPath.prevEdge, bestPath.nd}
 				bestPath = bestPath.prevNode
 			}
 			return path, dist
 		}
-		bestNode.Visit(func(nb graph.Neighbor) {
+		bestNode.Visit(func(nb graph.Adj) {
 			nd := nb.Nd.(graph.EstimateNode)
 			ed := nb.Ed.(graph.Weighted)
 			g := bestPath.g + ed.Weight()
@@ -121,9 +121,9 @@ func AStarA(start, end graph.EstimateNode) ([]graph.Neighbor, float64) {
 // AStarM is A* optimized for monotonic estimates.
 //
 // An admissable estimate may further be monotonic.  Monotonic means that if
-// node B is a neighbor of node A with edge AB, then
+// node B is adjacent to node A with edge AB, then
 // A.Estimate(C) <= AB.Weight() + B.Estimate(C).
-func AStarM(start, end graph.EstimateNode) ([]graph.Neighbor, float64) {
+func AStarM(start, end graph.EstimateNode) ([]graph.Adj, float64) {
 	p := &rNode{
 		nd: start,
 		f:  start.Estimate(end),
@@ -146,10 +146,10 @@ func AStarM(start, end graph.EstimateNode) ([]graph.Neighbor, float64) {
 			// done
 			dist := bestPath.g
 			i := bestPath.n
-			path := make([]graph.Neighbor, i)
+			path := make([]graph.Adj, i)
 			for bestPath != nil {
 				i--
-				path[i] = graph.Neighbor{bestPath.prevEdge, bestPath.nd}
+				path[i] = graph.Adj{bestPath.prevEdge, bestPath.nd}
 				bestPath = bestPath.prevNode
 			}
 			return path, dist
@@ -160,7 +160,7 @@ func AStarM(start, end graph.EstimateNode) ([]graph.Neighbor, float64) {
 		delete(open, bestNode)
 		closed[bestNode] = struct{}{}
 
-		bestNode.Visit(func(nb graph.Neighbor) {
+		bestNode.Visit(func(nb graph.Adj) {
 			nd := nb.Nd.(graph.EstimateNode)
 			ed := nb.Ed.(graph.Weighted)
 

@@ -29,10 +29,10 @@ func ExampleDigraph_Link() {
 	var output []string
 	for id, nd := range g {
 		// For each node, print the node.
-		line := fmt.Sprintf("node %v: neighbors:", id)
-		nd.Visit(func(nb graph.Neighbor) {
+		line := fmt.Sprintf("adjacent to node %v:", id)
+		nd.Visit(func(a graph.Adj) {
 			// Print a list of neighbors on the same line.
-			line += fmt.Sprintf(" %v", nb.Nd)
+			line += fmt.Sprintf(" %v", a.Nd)
 		})
 		output = append(output, line)
 	}
@@ -41,7 +41,7 @@ func ExampleDigraph_Link() {
 		fmt.Println(line)
 	}
 	// Output:
-	// node 1: neighbors: 2
-	// node 2: neighbors: 3 1
-	// node 3: neighbors:
+	// adjacent to node 1: 2
+	// adjacent to node 2: 3 1
+	// adjacent to node 3:
 }

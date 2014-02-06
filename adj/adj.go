@@ -12,17 +12,17 @@ import (
 )
 
 // Node represents a node in an adjacency graph, either directed or undirected.
-// It implements (for example) graph.NeighborNode, graph.EstimateNode,
+// It implements (for example) graph.AdjNode, graph.EstimateNode,
 // graph.ArborNode, graph.SpannerNode and fmt.Stringer.
 type Node struct {
 	Data interface{}
-	Nbs  []graph.Neighbor
+	Nbs  []graph.Adj
 }
 
-// Visit visits neighbors of a Node.
-func (n *Node) Visit(v graph.NeighborVisitor) {
-	for _, nb := range n.Nbs {
-		v(nb)
+// Visit visits adjacents of a Node.
+func (n *Node) Visit(v graph.AdjVisitor) {
+	for _, a := range n.Nbs {
+		v(a)
 	}
 }
 
@@ -49,8 +49,8 @@ func (w Weighted) Weight() float64 { return float64(w) }
 // graph.
 type Digraph map[interface{}]*Node
 
-// Link sets one Node of a Digraph to be a neighbor of another, adding either
-// or both nodes to the graph as neccessary.
+// Link sets one Node of a Digraph to be adjacent to another, adding either
+// or both nodes to the graph as neccessary and adding an arc linking them.
 //
 // N1 and n2 are used as map keys and are also assigned to the Data fields
 // when nodes are first added to the graph.  Because n1 and n2 are used as
@@ -67,42 +67,42 @@ func (g Digraph) Link(n1, n2 interface{}, arc graph.Arc) {
 		g[n2] = nd2
 	}
 	if nd1, ok := g[n1]; !ok {
-		nd1 = &Node{n1, []graph.Neighbor{{arc, nd2}}}
+		nd1 = &Node{n1, []graph.Adj{{arc, nd2}}}
 		g[n1] = nd1
 	} else {
-		nd1.Nbs = append(nd1.Nbs, graph.Neighbor{arc, nd2})
+		nd1.Nbs = append(nd1.Nbs, graph.Adj{arc, nd2})
 	}
 }
 
 // LinkFrom lets Node satisfy graph.ArborNode, to enable creation of an
 // arborescence on top of a graph.
-func (n *Node) LinkFrom(prev graph.NeighborNode, arc graph.Arc) graph.NeighborNode {
+func (n *Node) LinkFrom(prev graph.AdjNode, arc graph.Arc) graph.AdjNode {
 	rn := &Node{Data: n} // create new node referring to receiver.
 	if prev != nil {
-		nb := graph.Neighbor{Nd: rn}
+		a := graph.Adj{Nd: rn}
 		if wa, ok := arc.(graph.Weighted); ok {
-			nb.Ed = Weighted(wa.Weight()) // create arc if meaningful
+			a.Ed = Weighted(wa.Weight()) // create arc if meaningful
 		}
 		pn := prev.(*Node)
-		pn.Nbs = append(pn.Nbs, nb)
+		pn.Nbs = append(pn.Nbs, a)
 	}
 	return rn
 }
 
 // Span lets Node satisfy graph.SpannerNode, to enable creation of a
 // spanning tree on top of a graph.
-func (n *Node) Span(prev graph.NeighborNode, ed graph.Edge) graph.NeighborNode {
+func (n *Node) Span(prev graph.AdjNode, ed graph.Edge) graph.AdjNode {
 	rn := &Node{Data: n} // create new node referring to receiver.
 	if prev != nil {
-		nb := graph.Neighbor{Nd: rn}
+		a := graph.Adj{Nd: rn}
 		if we, ok := ed.(graph.Weighted); ok {
-			nb.Ed = Weighted(we.Weight()) // create edge if meaningful
+			a.Ed = Weighted(we.Weight()) // create edge if meaningful
 		}
 		pn := prev.(*Node)
-		pn.Nbs = append(pn.Nbs, nb)
+		pn.Nbs = append(pn.Nbs, a)
 		// above code same as LinkFrom.  two lines below are new.
-		nb.Nd = prev
-		rn.Nbs = []graph.Neighbor{nb}
+		a.Nd = prev
+		rn.Nbs = []graph.Adj{a}
 	}
 	return rn
 }
@@ -142,6 +142,6 @@ func (g Graph) Link(n1, n2 interface{}, ed graph.Edge) {
 	}
 	// edge is new
 	g.Edges[struct{ n1, n2 *Node }{nd1, nd2}] = ed
-	nd1.Nbs = append(nd1.Nbs, graph.Neighbor{ed, nd2})
-	nd2.Nbs = append(nd2.Nbs, graph.Neighbor{ed, nd1})
+	nd1.Nbs = append(nd1.Nbs, graph.Adj{ed, nd2})
+	nd2.Nbs = append(nd2.Nbs, graph.Adj{ed, nd1})
 }
