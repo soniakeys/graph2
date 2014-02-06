@@ -17,14 +17,14 @@ import (
 
 type (
 	uNode struct {
-		name string      // node name
-		nbs  []graph.Adj // "neighbors," adjacent arcs and nodes
+		name string       // node name
+		nbs  []graph.Half // "neighbors," adjacent arcs and nodes
 	}
 	uEdge float64
 )
 
 // One method implements graph.AdjNode.
-func (n *uNode) Visit(v graph.AdjVisitor) {
+func (n *uNode) Visit(v graph.HalfVisitor) {
 	for _, a := range n.nbs {
 		v(a)
 	}
@@ -42,8 +42,8 @@ func (e uEdge) String() string  { return fmt.Sprint(float64(e)) }
 // Method to make graph construction easy.
 func (n1 *uNode) link(n2 *uNode, weight int) {
 	e := uEdge(weight)
-	n1.nbs = append(n1.nbs, graph.Adj{&e, n2})
-	n2.nbs = append(n2.nbs, graph.Adj{&e, n1})
+	n1.nbs = append(n1.nbs, graph.Half{&e, n2})
+	n2.nbs = append(n2.nbs, graph.Half{&e, n1})
 }
 
 func ExampleDijkstraShortestPath_undirected() {

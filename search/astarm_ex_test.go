@@ -14,15 +14,15 @@ import (
 // edge type that implements graph.Weighted.  Our two types:
 type (
 	monoNode struct {
-		name string      // node name
-		h    float64     // heuristic distance estimate to end node
-		nbs  []graph.Adj // "neighbors," adjacent arcs and nodes
+		name string       // node name
+		h    float64      // heuristic distance estimate to end node
+		nbs  []graph.Half // "neighbors," adjacent arcs and nodes
 	}
 	monoArc float64
 )
 
 // Two methods implement graph.Estimator.
-func (n *monoNode) Visit(v graph.AdjVisitor) {
+func (n *monoNode) Visit(v graph.HalfVisitor) {
 	for _, a := range n.nbs {
 		v(a)
 	}
@@ -39,7 +39,7 @@ func (n *monoNode) String() string { return n.name }
 
 // One more method to make graph construction easy.
 func (n *monoNode) link(n2 *monoNode, weight int) {
-	n.nbs = append(n.nbs, graph.Adj{monoArc(weight), n2})
+	n.nbs = append(n.nbs, graph.Half{monoArc(weight), n2})
 }
 
 func ExampleAStarM() {

@@ -19,14 +19,14 @@ import (
 // nodes must implement graph.Weighted.  Weights must be non-negative and
 // must not be an Inf or NaN.
 //
-// The found shortest path is returned as a graph.Adj slice.  The first
+// The found shortest path is returned as a graph.Half slice.  The first
 // element of this slice will be the start node.  (The edge member will be nil,
 // as there is no edge that needs to be identified going to the start node.)
 // Remaining elements give the found path of edges and nodes.
 // Also returned is the total path length.  If the end node cannot be reached
-// from the start node, the returned Adj list will be nil and the path
+// from the start node, the returned Half list will be nil and the path
 // length +Inf.
-func DijkstraShortestPath(start, end graph.AdjNode) ([]graph.Adj, float64) {
+func DijkstraShortestPath(start, end graph.AdjNode) ([]graph.Half, float64) {
 	_, path, dist := djk(start, end, false)
 	return path, dist
 }
@@ -109,7 +109,7 @@ func (h *tentHeap) Pop() interface{} {
 	return tx
 }
 
-func djk(start, end graph.AdjNode, all bool) (graph.AdjNode, []graph.Adj, float64) {
+func djk(start, end graph.AdjNode, all bool) (graph.AdjNode, []graph.Half, float64) {
 	if start == nil {
 		return nil, nil, math.Inf(1)
 	}
@@ -131,7 +131,7 @@ func djk(start, end graph.AdjNode, all bool) (graph.AdjNode, []graph.Adj, float6
 			distance := ct.dist
 			// recover path by tracing prev links
 			i := ct.n
-			path := make([]graph.Adj, i)
+			path := make([]graph.Half, i)
 			for i > 0 {
 				i--
 				path[i].Nd = current
@@ -141,7 +141,7 @@ func djk(start, end graph.AdjNode, all bool) (graph.AdjNode, []graph.Adj, float6
 			}
 			return nil, path, distance // success
 		}
-		current.Visit(func(a graph.Adj) {
+		current.Visit(func(a graph.Half) {
 			nd := d[a.Nd]
 			if nd.tx < 0 {
 				return // skip nodes already done

@@ -15,14 +15,14 @@ import (
 
 type (
 	dspNode struct {
-		name string      // node name
-		nbs  []graph.Adj // "neighbors," adjacent arcs and nodes
+		name string       // node name
+		nbs  []graph.Half // "neighbors," adjacent arcs and nodes
 	}
 	dspArc float64
 )
 
 // One method implements graph.AdjNode.
-func (n *dspNode) Visit(v graph.AdjVisitor) {
+func (n *dspNode) Visit(v graph.HalfVisitor) {
 	for _, a := range n.nbs {
 		v(a)
 	}
@@ -38,7 +38,7 @@ func (n *dspNode) String() string { return n.name }
 
 // One more method to make graph construction easy.
 func (n *dspNode) link(n2 *dspNode, weight int) {
-	n.nbs = append(n.nbs, graph.Adj{dspArc(weight), n2})
+	n.nbs = append(n.nbs, graph.Half{dspArc(weight), n2})
 }
 
 func ExampleDijkstraShortestPath_directed() {

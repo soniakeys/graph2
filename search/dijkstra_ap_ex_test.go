@@ -15,14 +15,14 @@ import (
 
 type (
 	dapNode struct {
-		name string      // node name
-		nbs  []graph.Adj // "neighbors," adjacent arcs and nodes
+		name string       // node name
+		nbs  []graph.Half // "neighbors," adjacent arcs and nodes
 	}
 	dapArc float64
 )
 
 // Two methods implement graph.ArborNode.
-func (n *dapNode) Visit(v graph.AdjVisitor) {
+func (n *dapNode) Visit(v graph.HalfVisitor) {
 	for _, a := range n.nbs {
 		v(a)
 	}
@@ -30,7 +30,7 @@ func (n *dapNode) Visit(v graph.AdjVisitor) {
 func (n *dapNode) LinkFrom(prev graph.AdjNode, arc graph.Arc) graph.AdjNode {
 	rn := &arborNode{dap: n} // create new node referring to receiver.
 	if prev != nil {
-		a := graph.Adj{Nd: rn}
+		a := graph.Half{Nd: rn}
 		if wa, ok := arc.(graph.Weighted); ok {
 			a.Ed = dapArc(wa.Weight()) // create arc if meaningful
 		}
@@ -45,13 +45,13 @@ func (n *dapNode) LinkFrom(prev graph.AdjNode, arc graph.Arc) graph.AdjNode {
 // for example.  Here though we define a separate type to illustrate the
 // separate roles.
 type arborNode struct {
-	dap *dapNode    // reference to the original graph
-	nbs []graph.Adj // branches from this node in the arboresence
+	dap *dapNode     // reference to the original graph
+	nbs []graph.Half // branches from this node in the arboresence
 }
 
 // Satisfy graph.AdjNode.  (arborNode does not need to satisfy
 // graph.ArborNode, the original graph nodes do.)
-func (n *arborNode) Visit(v graph.AdjVisitor) {
+func (n *arborNode) Visit(v graph.HalfVisitor) {
 	for _, a := range n.nbs {
 		v(a)
 	}
@@ -69,7 +69,7 @@ func (a dapArc) Weight() float64 {
 
 // One more method on dapNode to make graph construction easy.
 func (n *dapNode) link(n2 *dapNode, weight int) {
-	n.nbs = append(n.nbs, graph.Adj{dapArc(weight), n2})
+	n.nbs = append(n.nbs, graph.Half{dapArc(weight), n2})
 }
 
 func ExampleDijkstraAllPaths() {
@@ -94,7 +94,7 @@ func ExampleDijkstraAllPaths() {
 		s += fmt.Sprint(n)
 		fmt.Println(s)
 		s += " "
-		n.Visit(func(nb graph.Adj) {
+		n.Visit(func(nb graph.Half) {
 			pp(s, nb.Nd)
 		})
 	}

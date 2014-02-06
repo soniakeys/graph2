@@ -14,15 +14,15 @@ import (
 // edge type that implements graph.Weighted.  Our two types:
 type (
 	estNode struct {
-		name string      // node name
-		h    float64     // heuristic distance estimate to end node
-		nbs  []graph.Adj // "neighbors," adjacent arcs and nodes
+		name string       // node name
+		h    float64      // heuristic distance estimate to end node
+		nbs  []graph.Half // "neighbors," adjacent arcs and nodes
 	}
 	estArc float64
 )
 
 // Two methods implement graph.Estimator.
-func (n *estNode) Visit(v graph.AdjVisitor) {
+func (n *estNode) Visit(v graph.HalfVisitor) {
 	for _, a := range n.nbs {
 		v(a)
 	}
@@ -39,7 +39,7 @@ func (n *estNode) String() string { return n.name }
 
 // One more method to make graph construction easy.
 func (n *estNode) link(n2 *estNode, weight int) {
-	n.nbs = append(n.nbs, graph.Adj{estArc(weight), n2})
+	n.nbs = append(n.nbs, graph.Half{estArc(weight), n2})
 }
 
 func ExampleAStarA() {

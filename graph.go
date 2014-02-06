@@ -3,22 +3,25 @@
 
 package graph
 
-// An AdjNode represents how it is adjacent to other nodes.
+// An AdjNode represents an adjacency relationship.
+//
+// The relationship is by edges or arcs that directly connect to other
+// AdjNodes.
 type AdjNode interface {
-	// Visit should call the AdjVisitor function for each adjacent "neighbor"
-	// of the receiver.
-	Visit(AdjVisitor)
+	// Visit should call the HalfVisitor function for each adjacent half
+	// arc or half edge.
+	Visit(HalfVisitor)
 }
 
-// AdjVistor is the argument type for AdjNode.Visit.
-type AdjVisitor func(Adj)
+// HalfVistor is the argument type for AdjNode.Visit.
+type HalfVisitor func(Half)
 
-// Adj associates an arc or edge with the node that is reached by the
-// arc or edge.  For a directed graph, an adjacent is an arc leading
-// from the node and the node at the end of the arc.  For an undirected
-// graph, an adjacent is an edge touching the node and the node on the
-// other end of the edge.
-type Adj struct {
+// Half is a half edge or half arc.  It associates an arc or edge with the
+// node that is reached by the arc or edge.  For a node in a directed graph,
+// a Half is an arc leading from the node and the node at the end of the arc.
+// For a node in an undirected graph, a Half is an edge touching the node and
+// the node on the other end of the edge.
+type Half struct {
 	Ed interface{} // arc or edge
 	Nd AdjNode
 }

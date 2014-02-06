@@ -16,11 +16,11 @@ import (
 // graph.ArborNode, graph.SpannerNode and fmt.Stringer.
 type Node struct {
 	Data interface{}
-	Nbs  []graph.Adj
+	Nbs  []graph.Half
 }
 
-// Visit visits adjacents of a Node.
-func (n *Node) Visit(v graph.AdjVisitor) {
+// Visit visits neighbors of a Node.
+func (n *Node) Visit(v graph.HalfVisitor) {
 	for _, a := range n.Nbs {
 		v(a)
 	}
@@ -67,10 +67,10 @@ func (g Digraph) Link(n1, n2 interface{}, arc graph.Arc) {
 		g[n2] = nd2
 	}
 	if nd1, ok := g[n1]; !ok {
-		nd1 = &Node{n1, []graph.Adj{{arc, nd2}}}
+		nd1 = &Node{n1, []graph.Half{{arc, nd2}}}
 		g[n1] = nd1
 	} else {
-		nd1.Nbs = append(nd1.Nbs, graph.Adj{arc, nd2})
+		nd1.Nbs = append(nd1.Nbs, graph.Half{arc, nd2})
 	}
 }
 
@@ -79,12 +79,12 @@ func (g Digraph) Link(n1, n2 interface{}, arc graph.Arc) {
 func (n *Node) LinkFrom(prev graph.AdjNode, arc graph.Arc) graph.AdjNode {
 	rn := &Node{Data: n} // create new node referring to receiver.
 	if prev != nil {
-		a := graph.Adj{Nd: rn}
+		h := graph.Half{Nd: rn}
 		if wa, ok := arc.(graph.Weighted); ok {
-			a.Ed = Weighted(wa.Weight()) // create arc if meaningful
+			h.Ed = Weighted(wa.Weight()) // create arc if meaningful
 		}
 		pn := prev.(*Node)
-		pn.Nbs = append(pn.Nbs, a)
+		pn.Nbs = append(pn.Nbs, h)
 	}
 	return rn
 }
@@ -94,15 +94,15 @@ func (n *Node) LinkFrom(prev graph.AdjNode, arc graph.Arc) graph.AdjNode {
 func (n *Node) Span(prev graph.AdjNode, ed graph.Edge) graph.AdjNode {
 	rn := &Node{Data: n} // create new node referring to receiver.
 	if prev != nil {
-		a := graph.Adj{Nd: rn}
+		h := graph.Half{Nd: rn}
 		if we, ok := ed.(graph.Weighted); ok {
-			a.Ed = Weighted(we.Weight()) // create edge if meaningful
+			h.Ed = Weighted(we.Weight()) // create edge if meaningful
 		}
 		pn := prev.(*Node)
-		pn.Nbs = append(pn.Nbs, a)
+		pn.Nbs = append(pn.Nbs, h)
 		// above code same as LinkFrom.  two lines below are new.
-		a.Nd = prev
-		rn.Nbs = []graph.Adj{a}
+		h.Nd = prev
+		rn.Nbs = []graph.Half{h}
 	}
 	return rn
 }
@@ -142,6 +142,6 @@ func (g Graph) Link(n1, n2 interface{}, ed graph.Edge) {
 	}
 	// edge is new
 	g.Edges[struct{ n1, n2 *Node }{nd1, nd2}] = ed
-	nd1.Nbs = append(nd1.Nbs, graph.Adj{ed, nd2})
-	nd2.Nbs = append(nd2.Nbs, graph.Adj{ed, nd1})
+	nd1.Nbs = append(nd1.Nbs, graph.Half{ed, nd2})
+	nd2.Nbs = append(nd2.Nbs, graph.Half{ed, nd1})
 }
