@@ -19,10 +19,20 @@ type Node struct {
 	Nbs  []graph.Half
 }
 
-// Visit visits neighbors of a Node.
+// Visit visits node neighbors of a Node.
+func (n *Node) Visit(v graph.NodeVisitor) bool {
+	for _, h := range n.Nbs {
+		if !v(h.Nd.(*Node)) {
+			return false
+		}
+	}
+	return true
+}
+
+// VisitAdj visits half edge neighbors of a Node.
 func (n *Node) VisitAdj(v graph.HalfVisitor) {
-	for _, a := range n.Nbs {
-		v(a)
+	for _, h := range n.Nbs {
+		v(h)
 	}
 }
 
