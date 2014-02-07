@@ -4,10 +4,10 @@
 package graph
 
 type Node interface {
-	Visit(NodeVistor)
+	Visit(NodeVisitor)
 }
 
-type NodeVistor func(Node)
+type NodeVisitor func(Node)
 
 // An AdjNode represents an adjacency relationship.
 //
@@ -19,7 +19,7 @@ type AdjNode interface {
 	VisitAdj(HalfVisitor)
 }
 
-// HalfVistor is the argument type for AdjNode.Visit.
+// HalfVisitor is the argument type for AdjNode.Visit.
 type HalfVisitor func(Half)
 
 // Half is a half edge or half arc.  It associates an arc or edge with the
