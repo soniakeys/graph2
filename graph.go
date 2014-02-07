@@ -4,10 +4,10 @@
 package graph
 
 type Node interface {
-	Visit(NodeVisitor)
+	Visit(NodeVisitor) (ok bool)
 }
 
-type NodeVisitor func(Node)
+type NodeVisitor func(Node) (ok bool)
 
 // An AdjNode represents an adjacency relationship.
 //
