@@ -8,6 +8,26 @@ import (
 	"github.com/soniakeys/graph/adj"
 )
 
+func ExampleNode_Visit() {
+	g := adj.Digraph{}
+	g.Link(0, 1, nil)
+	g.Link(0, 2, nil)
+	g.Link(0, 3, nil)
+	v := func(n graph.Node) bool {
+		num := n.(*adj.Node).Data.(int)
+		if num == 3 {
+			return false
+		}
+		fmt.Println(num)
+		return true
+	}
+	fmt.Println(g[0].Visit(v))
+	// Output:
+	// 1
+	// 2
+	// false
+}
+
 func ExampleWeighted_Weight() {
 	// Example shows that adj.Weighted implements graph.Weighted.
 	var a graph.Weighted

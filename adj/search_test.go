@@ -11,6 +11,32 @@ import (
 	"github.com/soniakeys/graph/search"
 )
 
+func ExampleDigraph_depthFirst() {
+	g := adj.Digraph{}
+	g.Link(0, 1, nil)
+	g.Link(0, 2, nil)
+	g.Link(0, 4, nil)
+	g.Link(1, 2, nil)
+	g.Link(2, 0, nil)
+	g.Link(2, 2, nil)
+	g.Link(2, 3, nil)
+	v := func(n graph.Node) bool {
+		num := n.(*adj.Node).Data.(int)
+		if num == 4 {
+			return false
+		}
+		fmt.Println(num)
+		return true
+	}
+	fmt.Println(search.DepthFirst(g[0], v))
+	// Output:
+	// 0
+	// 1
+	// 2
+	// 3
+	// false
+}
+
 func ExampleDigraph_dijkstraShortestPath() {
 	g := adj.Digraph{}
 	g.Link("a", "b", adj.Weighted(7))
