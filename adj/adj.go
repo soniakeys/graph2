@@ -20,7 +20,7 @@ type Node struct {
 }
 
 // Visit visits neighbors of a Node.
-func (n *Node) Visit(v graph.HalfVisitor) {
+func (n *Node) VisitAdj(v graph.HalfVisitor) {
 	for _, a := range n.Nbs {
 		v(a)
 	}

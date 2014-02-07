@@ -3,6 +3,12 @@
 
 package graph
 
+type Node interface {
+	Visit(NodeVistor)
+}
+
+type NodeVistor func(Node)
+
 // An AdjNode represents an adjacency relationship.
 //
 // The relationship is by edges or arcs that directly connect to other
@@ -10,7 +16,7 @@ package graph
 type AdjNode interface {
 	// Visit should call the HalfVisitor function for each adjacent half
 	// arc or half edge.
-	Visit(HalfVisitor)
+	VisitAdj(HalfVisitor)
 }
 
 // HalfVistor is the argument type for AdjNode.Visit.

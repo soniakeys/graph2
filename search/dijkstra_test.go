@@ -16,7 +16,7 @@ import (
 // minimal node type with no adjacency representation.
 type djNode0 struct{}
 
-func (n *djNode0) Visit(graph.HalfVisitor) {
+func (n *djNode0) VisitAdj(graph.HalfVisitor) {
 }
 
 func TestDijkstraDirected(t *testing.T) {
@@ -42,7 +42,7 @@ type stArc struct {
 	to     *stNode
 }
 
-func (n *stNode) Visit(v graph.HalfVisitor) {
+func (n *stNode) VisitAdj(v graph.HalfVisitor) {
 	for _, a := range n.nbs {
 		v(graph.Half{a, a.to})
 	}

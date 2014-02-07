@@ -141,7 +141,7 @@ func djk(start, end graph.AdjNode, all bool) (graph.AdjNode, []graph.Half, float
 			}
 			return nil, path, distance // success
 		}
-		current.Visit(func(a graph.Half) {
+		current.VisitAdj(func(a graph.Half) {
 			nd := d[a.Nd]
 			if nd.tx < 0 {
 				return // skip nodes already done

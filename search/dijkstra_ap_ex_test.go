@@ -22,7 +22,7 @@ type (
 )
 
 // Two methods implement graph.ArborNode.
-func (n *dapNode) Visit(v graph.HalfVisitor) {
+func (n *dapNode) VisitAdj(v graph.HalfVisitor) {
 	for _, a := range n.nbs {
 		v(a)
 	}
@@ -51,7 +51,7 @@ type arborNode struct {
 
 // Satisfy graph.AdjNode.  (arborNode does not need to satisfy
 // graph.ArborNode, the original graph nodes do.)
-func (n *arborNode) Visit(v graph.HalfVisitor) {
+func (n *arborNode) VisitAdj(v graph.HalfVisitor) {
 	for _, a := range n.nbs {
 		v(a)
 	}
@@ -94,7 +94,7 @@ func ExampleDijkstraAllPaths() {
 		s += fmt.Sprint(n)
 		fmt.Println(s)
 		s += " "
-		n.Visit(func(nb graph.Half) {
+		n.VisitAdj(func(nb graph.Half) {
 			pp(s, nb.Nd)
 		})
 	}

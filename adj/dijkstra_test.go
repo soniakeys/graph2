@@ -74,7 +74,7 @@ func ExampleDigraph_dijkstraAllPaths() {
 		s += fmt.Sprint(n)
 		fmt.Println(s)
 		s += " "
-		n.Visit(func(nb graph.Half) {
+		n.VisitAdj(func(nb graph.Half) {
 			pp(s, nb.Nd)
 		})
 	}

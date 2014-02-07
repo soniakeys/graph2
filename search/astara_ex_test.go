@@ -22,7 +22,7 @@ type (
 )
 
 // Two methods implement graph.Estimator.
-func (n *estNode) Visit(v graph.HalfVisitor) {
+func (n *estNode) VisitAdj(v graph.HalfVisitor) {
 	for _, a := range n.nbs {
 		v(a)
 	}

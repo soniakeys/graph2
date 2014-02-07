@@ -30,7 +30,7 @@ func ExampleDigraph_Link() {
 	for id, nd := range g {
 		// For each node, print the node.
 		line := fmt.Sprintf("adjacent to node %v:", id)
-		nd.Visit(func(h graph.Half) {
+		nd.VisitAdj(func(h graph.Half) {
 			// Print a list of neighbors on the same line.
 			line += fmt.Sprintf(" %v", h.Nd)
 		})
