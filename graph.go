@@ -3,10 +3,23 @@
 
 package graph
 
+// A Node represents an adjacency relationship to other nodes.
+//
+// The relationship defines arcs or edges but does not associate any
+// data objects with the arcs or edges.  A graph of Nodes is necessarily
+// unweighted then.
 type Node interface {
+	// Visit calls the NodeVisitor function for neighboring nodes.
+	// If the NodeVisitor function returns false for any neighbor, Visit
+	// stops visiting and returns false immediately.  Visit returns true
+	// otherwise.
 	Visit(NodeVisitor) (ok bool)
 }
 
+// NodeVisitor is the argument type for Node.Visit.  A node visitor
+// can process the node as appropriate and return a result to the caller
+// indicating whether to continue visiting or not.  True means continue,
+// false means there is no need to continue.
 type NodeVisitor func(Node) (ok bool)
 
 // An AdjNode represents an adjacency relationship.
