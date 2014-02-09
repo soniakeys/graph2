@@ -8,7 +8,7 @@ import (
 	"github.com/soniakeys/graph/adj"
 )
 
-func ExampleNode_Visit() {
+func ExampleNode_VisitOk() {
 	g := adj.Digraph{}
 	g.Link(0, 1, nil)
 	g.Link(0, 2, nil)
@@ -21,7 +21,7 @@ func ExampleNode_Visit() {
 		fmt.Println(num)
 		return true
 	}
-	fmt.Println(g[0].Visit(v))
+	fmt.Println(g[0].VisitOk(v))
 	// Output:
 	// 1
 	// 2

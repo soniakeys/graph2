@@ -37,6 +37,32 @@ func ExampleDigraph_depthFirst() {
 	// false
 }
 
+func ExampleDigraph_breadthFirst() {
+	g := adj.Digraph{}
+	g.Link(0, 1, nil)
+	g.Link(0, 2, nil)
+	g.Link(0, 4, nil)
+	g.Link(1, 2, nil)
+	g.Link(2, 0, nil)
+	g.Link(2, 2, nil)
+	g.Link(2, 3, nil)
+	v := func(n graph.Node) bool {
+		num := n.(*adj.Node).Data.(int)
+		if num == 3 {
+			return false
+		}
+		fmt.Println(num)
+		return true
+	}
+	fmt.Println(search.BreadthFirst(g[0], v))
+	// Output:
+	// 0
+	// 1
+	// 2
+	// 4
+	// false
+}
+
 func ExampleDigraph_dijkstraShortestPath() {
 	g := adj.Digraph{}
 	g.Link("a", "b", adj.Weighted(7))

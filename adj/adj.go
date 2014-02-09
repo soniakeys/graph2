@@ -19,8 +19,8 @@ type Node struct {
 	Nbs  []graph.Half
 }
 
-// Visit visits node neighbors of a Node.
-func (n *Node) Visit(v graph.NodeVisitor) bool {
+// VisitOk visits node neighbors of a Node.
+func (n *Node) VisitOk(v graph.NodeOkVisitor) bool {
 	for _, h := range n.Nbs {
 		if !v(h.Nd.(*Node)) {
 			return false
