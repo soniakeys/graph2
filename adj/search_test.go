@@ -54,7 +54,7 @@ func ExampleDigraph_breadthFirst() {
 		fmt.Println(num)
 		return true
 	}
-	fmt.Println(search.BreadthFirst(g[0], v))
+	fmt.Println(search.BreadthFirstSimple(g[0], v))
 	// Output:
 	// 0
 	// 1

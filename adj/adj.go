@@ -29,6 +29,10 @@ func (n *Node) VisitOk(v graph.NodeOkVisitor) bool {
 	return true
 }
 
+func (n *Node) NumAdj() int {
+	return len(n.Nbs)
+}
+
 // VisitAdj visits half edge neighbors of a Node.
 func (n *Node) VisitAdj(v graph.HalfVisitor) {
 	for _, h := range n.Nbs {

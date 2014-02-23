@@ -22,6 +22,35 @@ type Node interface {
 // false means there is no need to continue.
 type NodeOkVisitor func(Node) (ok bool)
 
+type BFNode interface {
+	VisitBFIn(BFNeighborVisitor) (ok bool)
+	VisitBFOut(BFNeighborVisitor) (ok bool)
+	NumAdj() int
+}
+
+type BFGraph interface {
+	// Nodes must construct a new map populated with all nodes in the graph.
+	// BreadthFirst2 will consume the map.
+	Nodes() map[BFNode]struct{}
+	// Total number of edges or arcs in the graph.  For an undirected graph
+	// return the number of graph edges.  While each edge may be represented
+	// internally with links in both directions, count each edge once and do
+	// not count the links separately.  For directional graphs, return the
+	// number of graph arcs.  Again, if arcs are duplicated internally for
+	// access as both inward and outward pointing arcs, count each arc only
+	// once.
+	NumEdges() int
+}
+
+type BFNeighborVisitor func(BFNode) int
+type BFNodeVisitor func(n BFNode, level int) (ok bool)
+
+const (
+	BFGo    = iota // continue visiting neighbors
+	BFStop         // stop visiting, return false to signal stop bf search
+	BFFound        // stop visiting, return true
+)
+
 // An AdjNode represents an adjacency relationship.
 //
 // The relationship is by edges or arcs that directly connect to other
