@@ -22,12 +22,8 @@ type Node interface {
 // false means there is no need to continue.
 type NodeOkVisitor func(Node) (ok bool)
 
-type BFNode interface {
-	VisitBFIn(BFNeighborVisitor) (ok bool)
-	VisitBFOut(BFNeighborVisitor) (ok bool)
-	NumAdj() int
-}
-
+// BFGraph must be implemented on a collection of nodes for the BreadthFirst
+// search algorithm.
 type BFGraph interface {
 	// Nodes must construct a new map populated with all nodes in the graph.
 	// BreadthFirst2 will consume the map.
@@ -42,14 +38,51 @@ type BFGraph interface {
 	NumEdges() int
 }
 
+// BFNeighborVisitors are defined within the BreadthFirst search function.
+// Neither graph implementers nor search clients need to define these.
+// BreadthFirst passes them as arguments to the Visit methods of BFNode.
 type BFNeighborVisitor func(BFNode) int
-type BFNodeVisitor func(n BFNode, level int) (ok bool)
 
+// BF constants returned by BFNeighborVisitor functions.  They communicate
+// a result from the BreadthFirst search function to (BFNode) methods
+// implementing a breadth first searchable graph.
 const (
-	BFGo    = iota // continue visiting neighbors
-	BFStop         // stop visiting, return false to signal stop bf search
-	BFFound        // stop visiting, return true
+	BFGo    = iota // Continue visiting neighbors.
+	BFStop         // Stop visiting, return false to signal stop bf search.
+	BFFound        // Stop visiting, return true.
 )
+
+// BFNode defines methods that the BreadthFirst search function will call
+// in the course of its search.  The VisitBF functions iterate over node
+// neighbors.  A false result from any of these tells BreadthFirst to terminate
+// search early.
+type BFNode interface {
+	// VisitBFIn must iterate over the inward-pointing arcs of the node.
+	// for each neighbor by inward-pointing arc, VisithBFIn must call the
+	// neighbor visitor function and handle one of three integer results
+	// as follows:
+	//    BFGo:    Continue iteration.
+	//    BFStop:  Break from iteration and return false from VisitBFIn.
+	//    BFFound: Break from iteration but still return true from VisitBFIn.
+	// If the node has no neighbors by inward-pointing arcs or if the visitor
+	// function returns BFGo for all neighbors, VisitBFIn must return true.
+	VisitBFIn(BFNeighborVisitor) (ok bool)
+	// VisitBFOut must iterate over the outward-pointing arcs of the node,
+	// The integer result of the visitor function must be handled as for
+	// VisitBFIn except that the only possible results are BFGo and BFStop.
+	VisitBFOut(BFNeighborVisitor) (ok bool)
+	// NumAdj must return the number of outward-pointing arcs from the node.
+	NumAdj() int
+}
+
+// A BFNodeVisitor is implemented by a caller of the BreadthFirst search
+// function.  BreadthFirst will call the BFNodeVisitor for each node of a
+// graph as it traverses the graph in breadth first order.  Argument n is
+// the node being visited, level is the level of the search where 0 is the
+// start node, 1 is immediate neighbors of the node, and so on.  BFNodeVistor
+// should return true for BreadthFirst to continue traversing the graph.
+// It can return false to signal BreadthFirst to terminate traversal early.
+type BFNodeVisitor func(n BFNode, level int) (ok bool)
 
 // An AdjNode represents an adjacency relationship.
 //
