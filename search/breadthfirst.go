@@ -40,6 +40,7 @@ func BreadthFirst(g graph.BFGraph, start graph.BFNode, visit graph.BFNodeVisitor
 		}
 	bottomUpAgain:
 		lNum++
+		// TODO mf not needed here.  compute on conversion back to top down.
 		lMap, mf, ok = bottomUp(lNum, lMap, visit, visited, unvis)
 		if !ok {
 			return visited, false
