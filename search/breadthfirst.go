@@ -118,11 +118,12 @@ func bottomUp(lNum int, lmap bfMap, visit graph.BFNodeVisitor, visited bfVMap, u
 	return next, mnext, true
 }
 
-func BreadthFirstSimple(start graph.Node, visit graph.NodeOkVisitor) (ok bool) {
+func BreadthFirstSimple(start graph.Node, visit graph.NodeOkVisitor) (p map[graph.Node]graph.Node, ok bool) {
+	visited := map[graph.Node]graph.Node{}
 	if !visit(start) {
-		return false
+		return visited, false
 	}
-	visited := map[graph.Node]struct{}{start: struct{}{}}
+	visited[start] = nil
 	level := []graph.Node{start}
 	next := []graph.Node{}
 	for len(level) > 0 {
@@ -132,16 +133,16 @@ func BreadthFirstSimple(start graph.Node, visit graph.NodeOkVisitor) (ok bool) {
 					if !visit(n) {
 						return false
 					}
-					visited[n] = struct{}{}
+					visited[n] = v
 					next = append(next, n)
 				}
 				return true
 			}) {
-				return false
+				return visited, false
 			}
 		}
 		level = next
 		next = level[:0]
 	}
-	return true
+	return visited, true
 }

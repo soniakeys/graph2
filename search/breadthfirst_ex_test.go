@@ -42,7 +42,8 @@ func ExampleBreadthFirstSimple() {
 		fmt.Println(num)
 		return true
 	}
-	fmt.Println(search.BreadthFirstSimple(n0, v))
+	_, ok := search.BreadthFirstSimple(n0, v)
+	fmt.Println(ok)
 	// Output:
 	// 0
 	// 1
