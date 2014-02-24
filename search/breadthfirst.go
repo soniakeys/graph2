@@ -2,7 +2,7 @@ package search
 
 import "github.com/soniakeys/graph"
 
-func BreadthFirst(g graph.BFGraph, start graph.BFNode, visit graph.BFNodeVisitor) (p map[graph.BFNode]graph.BFNode, ok bool) {
+func BreadthFirst2(g graph.BF2Graph, start graph.BF2Node, visit graph.BF2NodeVisitor) (p map[graph.BF2Node]graph.BF2Node, ok bool) {
 	lNum := 0
 	visited := bfVMap{}
 	if !visit(start, lNum) {
@@ -55,7 +55,7 @@ func BreadthFirst(g graph.BFGraph, start graph.BFNode, visit graph.BFNodeVisitor
 			goto bottomUpAgain
 		}
 		// convert
-		level = make([]graph.BFNode, len(lMap))
+		level = make([]graph.BF2Node, len(lMap))
 		i := 0
 		for n := range lMap {
 			level[i] = n
@@ -65,24 +65,24 @@ func BreadthFirst(g graph.BFGraph, start graph.BFNode, visit graph.BFNodeVisitor
 	return visited, true
 }
 
-type bfMap map[graph.BFNode]struct{}
-type bfVMap map[graph.BFNode]graph.BFNode
-type bfList []graph.BFNode
+type bfMap map[graph.BF2Node]struct{}
+type bfVMap map[graph.BF2Node]graph.BF2Node
+type bfList []graph.BF2Node
 
-func topDown(lNum int, level []graph.BFNode, visit graph.BFNodeVisitor, visited bfVMap, unvis bfMap) (next bfList, mnext int, ok bool) {
+func topDown(lNum int, level []graph.BF2Node, visit graph.BF2NodeVisitor, visited bfVMap, unvis bfMap) (next bfList, mnext int, ok bool) {
 	for _, v := range level {
-		if !v.VisitBFOut(func(n graph.BFNode) int {
+		if !v.VisitBF2Out(func(n graph.BF2Node) int {
 			if _, ok := visited[n]; ok {
-				return graph.BFGo
+				return graph.BF2Go
 			}
 			if !visit(n, lNum) {
-				return graph.BFStop
+				return graph.BF2Stop
 			}
 			visited[n] = v
 			delete(unvis, n)
 			next = append(next, n)
 			mnext += n.NumAdj()
-			return graph.BFGo
+			return graph.BF2Go
 		}) {
 			return nil, 0, false
 		}
@@ -91,26 +91,26 @@ func topDown(lNum int, level []graph.BFNode, visit graph.BFNodeVisitor, visited 
 }
 
 const (
-	bfGo    = iota // continue searching neighbors
-	bfStop         // stop searching neighbors, stop bf search
-	bfFound        // stop searching neigbhors, continue bf search
+	bf2Go    = iota // continue searching neighbors
+	bf2Stop         // stop searching neighbors, stop bf search
+	bf2Found        // stop searching neigbhors, continue bf search
 )
 
-func bottomUp(lNum int, lmap bfMap, visit graph.BFNodeVisitor, visited bfVMap, unvis bfMap) (next bfMap, mnext int, ok bool) {
+func bottomUp(lNum int, lmap bfMap, visit graph.BF2NodeVisitor, visited bfVMap, unvis bfMap) (next bfMap, mnext int, ok bool) {
 	next = bfMap{}
 	for v := range unvis {
-		if !v.VisitBFIn(func(n graph.BFNode) int {
+		if !v.VisitBF2In(func(n graph.BF2Node) int {
 			if _, ok := lmap[n]; !ok {
-				return graph.BFGo
+				return graph.BF2Go
 			}
 			if !visit(v, lNum) {
-				return graph.BFStop
+				return graph.BF2Stop
 			}
 			visited[v] = n
 			delete(unvis, v)
 			next[v] = struct{}{}
 			mnext += v.NumAdj()
-			return graph.BFFound
+			return graph.BF2Found
 		}) {
 			return nil, 0, false
 		}
@@ -118,19 +118,21 @@ func bottomUp(lNum int, lmap bfMap, visit graph.BFNodeVisitor, visited bfVMap, u
 	return next, mnext, true
 }
 
-func BreadthFirstSimple(start graph.Node, visit graph.NodeOkVisitor) (p map[graph.Node]graph.Node, ok bool) {
+func BreadthFirst1(start graph.Node, visit graph.LevelVisitor) (p map[graph.Node]graph.Node, ok bool) {
+	lnum := 0
 	visited := map[graph.Node]graph.Node{}
-	if !visit(start) {
+	if !visit(start, lnum) {
 		return visited, false
 	}
 	visited[start] = nil
 	level := []graph.Node{start}
 	next := []graph.Node{}
 	for len(level) > 0 {
+		lnum++
 		for _, v := range level {
-			if !v.VisitOk(func(n graph.Node) bool {
+			if !v.VisitAdjNodes(func(n graph.Node) bool {
 				if _, ok := visited[n]; !ok {
-					if !visit(n) {
+					if !visit(n, lnum) {
 						return false
 					}
 					visited[n] = v

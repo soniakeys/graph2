@@ -12,24 +12,24 @@ import (
 
 type bfuNode struct {
 	num int
-	nbs []graph.BFNode
+	nbs []graph.BF2Node
 }
 
-func (n bfuNode) VisitBFIn(v graph.BFNeighborVisitor) bool {
+func (n bfuNode) VisitBF2In(v graph.BF2NeighborVisitor) bool {
 	for _, nb := range n.nbs {
 		switch v(nb) {
-		case graph.BFStop:
+		case graph.BF2Stop:
 			return false
-		case graph.BFFound:
+		case graph.BF2Found:
 			return true
 		}
 	}
 	return true
 }
 
-func (n bfuNode) VisitBFOut(v graph.BFNeighborVisitor) bool {
+func (n bfuNode) VisitBF2Out(v graph.BF2NeighborVisitor) bool {
 	for _, nb := range n.nbs {
-		if v(nb) == graph.BFStop {
+		if v(nb) == graph.BF2Stop {
 			return false
 		}
 	}
@@ -50,8 +50,8 @@ type bfuGraph struct {
 }
 
 func (g bfuGraph) NumEdges() int { return g.ned }
-func (g bfuGraph) Nodes() map[graph.BFNode]struct{} {
-	m := make(map[graph.BFNode]struct{}, len(g.nds))
+func (g bfuGraph) Nodes() map[graph.BF2Node]struct{} {
+	m := make(map[graph.BF2Node]struct{}, len(g.nds))
 	for _, n := range g.nds {
 		m[n] = struct{}{}
 	}
@@ -115,11 +115,11 @@ func TestBF2_undirected(t *testing.T) {
 	g.link(25, 32)
 	g.link(33, 32)
 	// test is to list paths up to two levels from node 17
-	v := func(n graph.BFNode, l int) (ok bool) {
+	v := func(n graph.BF2Node, l int) (ok bool) {
 		return l <= 2
 	}
 	start := g.nds[17]
-	p, ok := search.BreadthFirst(g, start, v)
+	p, ok := search.BreadthFirst2(g, start, v)
 	if ok { // expecing !ok after curtailing search at level 3
 		t.Fatal(ok)
 	}

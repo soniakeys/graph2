@@ -26,7 +26,7 @@ import (
 // Also returned is the total path length.  If the end node cannot be reached
 // from the start node, the returned Half list will be nil and the path
 // length +Inf.
-func DijkstraShortestPath(start, end graph.AdjNode) ([]graph.Half, float64) {
+func DijkstraShortestPath(start, end graph.HalfNode) ([]graph.Half, float64) {
 	_, path, dist := djk(start, end, false)
 	return path, dist
 }
@@ -45,7 +45,7 @@ func DijkstraShortestPath(start, end graph.AdjNode) ([]graph.Half, float64) {
 // The arborescence is constructed by calling the LinkFrom method on the
 // nodes of the graph.  The root of the tree corresponds to start, and the
 // function returns this root.
-func DijkstraAllPaths(start graph.ArborNode) graph.AdjNode {
+func DijkstraAllPaths(start graph.ArborNode) graph.HalfNode {
 	tree, _, _ := djk(start, nil, true)
 	return tree
 }
@@ -68,7 +68,7 @@ type dijkstra struct {
 	tx int
 	// path back to start, either by nodes of the original graph or by
 	// nodes of the arborescence under construction
-	prevNode graph.AdjNode
+	prevNode graph.HalfNode
 	// edge from prevNode to the node of this struct
 	prevEdge graph.Weighted
 }
@@ -78,7 +78,7 @@ type tentPath struct {
 	dist float64 // tentative path distance
 	n    int     // number of nodes in path
 	rx   int     // heap.Remove index
-	nd   graph.AdjNode
+	nd   graph.HalfNode
 }
 
 type tentHeap struct {
@@ -109,12 +109,12 @@ func (h *tentHeap) Pop() interface{} {
 	return tx
 }
 
-func djk(start, end graph.AdjNode, all bool) (graph.AdjNode, []graph.Half, float64) {
+func djk(start, end graph.HalfNode, all bool) (graph.HalfNode, []graph.Half, float64) {
 	if start == nil {
 		return nil, nil, math.Inf(1)
 	}
 	current := start
-	var stRoot, cr graph.AdjNode
+	var stRoot, cr graph.HalfNode
 	if all {
 		stRoot = start.(graph.ArborNode).LinkFrom(nil, nil)
 		cr = stRoot
@@ -122,7 +122,7 @@ func djk(start, end graph.AdjNode, all bool) (graph.AdjNode, []graph.Half, float
 		cr = current
 	}
 	cd := dijkstra{tx: -1} // mark start done.  it skips the heap.
-	d := map[graph.AdjNode]dijkstra{current: cd}
+	d := map[graph.HalfNode]dijkstra{current: cd}
 	ct := tentPath{n: 1} // path length 1 for start node
 	h := &tentHeap{
 		pool: make([]tentPath, 1)} // zero element unused
@@ -141,7 +141,7 @@ func djk(start, end graph.AdjNode, all bool) (graph.AdjNode, []graph.Half, float
 			}
 			return nil, path, distance // success
 		}
-		current.VisitAdj(func(a graph.Half) {
+		current.VisitAdjHalfs(func(a graph.Half) {
 			nd := d[a.Nd]
 			if nd.tx < 0 {
 				return // skip nodes already done

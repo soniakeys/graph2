@@ -24,7 +24,7 @@ type (
 )
 
 // One method implements graph.AdjNode.
-func (n *uNode) VisitAdj(v graph.HalfVisitor) {
+func (n *uNode) VisitAdjHalfs(v graph.AdjHalfVisitor) {
 	for _, a := range n.nbs {
 		v(a)
 	}

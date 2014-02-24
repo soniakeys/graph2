@@ -8,7 +8,7 @@ import (
 	"github.com/soniakeys/graph/adj"
 )
 
-func ExampleNode_VisitOk() {
+func ExampleNode_VisitAdjNodes() {
 	g := adj.Digraph{}
 	g.Link(0, 1, nil)
 	g.Link(0, 2, nil)
@@ -21,7 +21,7 @@ func ExampleNode_VisitOk() {
 		fmt.Println(num)
 		return true
 	}
-	fmt.Println(g[0].VisitOk(v))
+	fmt.Println(g[0].VisitAdjNodes(v))
 	// Output:
 	// 1
 	// 2
@@ -50,7 +50,7 @@ func ExampleDigraph_Link() {
 	for id, nd := range g {
 		// For each node, print the node.
 		line := fmt.Sprintf("adjacent to node %v:", id)
-		nd.VisitAdj(func(h graph.Half) {
+		nd.VisitAdjHalfs(func(h graph.Half) {
 			// Print a list of neighbors on the same line.
 			line += fmt.Sprintf(" %v", h.Nd)
 		})

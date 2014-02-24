@@ -74,7 +74,7 @@ func AStarA(start, end graph.EstimateNode) ([]graph.Half, float64) {
 			}
 			return path, dist
 		}
-		bestNode.VisitAdj(func(nb graph.Half) {
+		bestNode.VisitAdjHalfs(func(nb graph.Half) {
 			nd := nb.Nd.(graph.EstimateNode)
 			ed := nb.Ed.(graph.Weighted)
 			g := bestPath.g + ed.Weight()
@@ -160,7 +160,7 @@ func AStarM(start, end graph.EstimateNode) ([]graph.Half, float64) {
 		delete(open, bestNode)
 		closed[bestNode] = struct{}{}
 
-		bestNode.VisitAdj(func(nb graph.Half) {
+		bestNode.VisitAdjHalfs(func(nb graph.Half) {
 			nd := nb.Nd.(graph.EstimateNode)
 			ed := nb.Ed.(graph.Weighted)
 

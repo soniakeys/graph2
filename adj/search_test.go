@@ -20,7 +20,7 @@ func ExampleDigraph_depthFirst() {
 	g.Link(2, 0, nil)
 	g.Link(2, 2, nil)
 	g.Link(2, 3, nil)
-	v := func(n graph.Node) bool {
+	v := func(n graph.Node, level int) bool {
 		num := n.(*adj.Node).Data.(int)
 		if num == 4 {
 			return false
@@ -46,7 +46,7 @@ func ExampleDigraph_breadthFirst() {
 	g.Link(2, 0, nil)
 	g.Link(2, 2, nil)
 	g.Link(2, 3, nil)
-	v := func(n graph.Node) bool {
+	v := func(n graph.Node, level int) bool {
 		num := n.(*adj.Node).Data.(int)
 		if num == 3 {
 			return false
@@ -54,7 +54,8 @@ func ExampleDigraph_breadthFirst() {
 		fmt.Println(num)
 		return true
 	}
-	fmt.Println(search.BreadthFirstSimple(g[0], v))
+	_, ok := search.BreadthFirst1(g[0], v)
+	fmt.Println(ok)
 	// Output:
 	// 0
 	// 1
@@ -121,12 +122,12 @@ func ExampleDigraph_dijkstraAllPaths() {
 	g.Link("d", "e", adj.Weighted(6))
 	g.Link("e", "f", adj.Weighted(9))
 	// a recursive function to print paths
-	var pp func(string, graph.AdjNode)
-	pp = func(s string, n graph.AdjNode) {
+	var pp func(string, graph.HalfNode)
+	pp = func(s string, n graph.HalfNode) {
 		s += fmt.Sprint(n)
 		fmt.Println(s)
 		s += " "
-		n.VisitAdj(func(nb graph.Half) {
+		n.VisitAdjHalfs(func(nb graph.Half) {
 			pp(s, nb.Nd)
 		})
 	}

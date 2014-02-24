@@ -22,12 +22,12 @@ type (
 )
 
 // Two methods implement graph.ArborNode.
-func (n *dapNode) VisitAdj(v graph.HalfVisitor) {
+func (n *dapNode) VisitAdjHalfs(v graph.AdjHalfVisitor) {
 	for _, a := range n.nbs {
 		v(a)
 	}
 }
-func (n *dapNode) LinkFrom(prev graph.AdjNode, arc graph.Arc) graph.AdjNode {
+func (n *dapNode) LinkFrom(prev graph.HalfNode, arc graph.Arc) graph.HalfNode {
 	rn := &arborNode{dap: n} // create new node referring to receiver.
 	if prev != nil {
 		a := graph.Half{Nd: rn}
@@ -51,7 +51,7 @@ type arborNode struct {
 
 // Satisfy graph.AdjNode.  (arborNode does not need to satisfy
 // graph.ArborNode, the original graph nodes do.)
-func (n *arborNode) VisitAdj(v graph.HalfVisitor) {
+func (n *arborNode) VisitAdjHalfs(v graph.AdjHalfVisitor) {
 	for _, a := range n.nbs {
 		v(a)
 	}
@@ -89,12 +89,12 @@ func ExampleDijkstraAllPaths() {
 	d.link(e, 6)
 	e.link(f, 9)
 	// a recursive function to print paths
-	var pp func(string, graph.AdjNode)
-	pp = func(s string, n graph.AdjNode) {
+	var pp func(string, graph.HalfNode)
+	pp = func(s string, n graph.HalfNode) {
 		s += fmt.Sprint(n)
 		fmt.Println(s)
 		s += " "
-		n.VisitAdj(func(nb graph.Half) {
+		n.VisitAdjHalfs(func(nb graph.Half) {
 			pp(s, nb.Nd)
 		})
 	}

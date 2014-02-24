@@ -12,15 +12,18 @@ import (
 )
 
 // Node represents a node in an adjacency graph, either directed or undirected.
-// It implements (for example) graph.AdjNode, graph.EstimateNode,
+// It implements (for example) graph.Node, graph.HalfNode, graph.EstimateNode,
 // graph.ArborNode, graph.SpannerNode and fmt.Stringer.
 type Node struct {
 	Data interface{}
 	Nbs  []graph.Half
 }
 
-// VisitOk visits node neighbors of a Node.
-func (n *Node) VisitOk(v graph.NodeOkVisitor) bool {
+// VisitAdjNodes iterates over adjacent nodes, calling the visitor funcction
+// for each.  If the visitor function returns false, VisitAdjNodes stops
+// iteration and immediately returns false.  Otherwise VisitAdjNodes returns
+// true after iterating over all adjacent nodes.
+func (n *Node) VisitAdjNodes(v graph.AdjNodeVisitor) bool {
 	for _, h := range n.Nbs {
 		if !v(h.Nd.(*Node)) {
 			return false
@@ -29,12 +32,14 @@ func (n *Node) VisitOk(v graph.NodeOkVisitor) bool {
 	return true
 }
 
+// NumAdj returns the number of adjacent nodes.
 func (n *Node) NumAdj() int {
 	return len(n.Nbs)
 }
 
-// VisitAdj visits half edge neighbors of a Node.
-func (n *Node) VisitAdj(v graph.HalfVisitor) {
+// VisitAdjHalfs visits adjacent half edges, calling the visitor funcction
+// for each.
+func (n *Node) VisitAdjHalfs(v graph.AdjHalfVisitor) {
 	for _, h := range n.Nbs {
 		v(h)
 	}
@@ -90,7 +95,7 @@ func (g Digraph) Link(n1, n2 interface{}, arc graph.Arc) {
 
 // LinkFrom lets Node satisfy graph.ArborNode, to enable creation of an
 // arborescence on top of a graph.
-func (n *Node) LinkFrom(prev graph.AdjNode, arc graph.Arc) graph.AdjNode {
+func (n *Node) LinkFrom(prev graph.HalfNode, arc graph.Arc) graph.HalfNode {
 	rn := &Node{Data: n} // create new node referring to receiver.
 	if prev != nil {
 		h := graph.Half{Nd: rn}
@@ -105,7 +110,7 @@ func (n *Node) LinkFrom(prev graph.AdjNode, arc graph.Arc) graph.AdjNode {
 
 // Span lets Node satisfy graph.SpannerNode, to enable creation of a
 // spanning tree on top of a graph.
-func (n *Node) Span(prev graph.AdjNode, ed graph.Edge) graph.AdjNode {
+func (n *Node) Span(prev graph.HalfNode, ed graph.Edge) graph.HalfNode {
 	rn := &Node{Data: n} // create new node referring to receiver.
 	if prev != nil {
 		h := graph.Half{Nd: rn}

@@ -22,7 +22,7 @@ type (
 )
 
 // One method implements graph.AdjNode.
-func (n *dspNode) VisitAdj(v graph.HalfVisitor) {
+func (n *dspNode) VisitAdjHalfs(v graph.AdjHalfVisitor) {
 	for _, a := range n.nbs {
 		v(a)
 	}

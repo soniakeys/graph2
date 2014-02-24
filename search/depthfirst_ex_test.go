@@ -12,7 +12,7 @@ type dfNode struct {
 	nbs []graph.Node
 }
 
-func (n dfNode) VisitOk(v graph.NodeOkVisitor) bool {
+func (n dfNode) VisitAdjNodes(v graph.AdjNodeVisitor) bool {
 	for _, nb := range n.nbs {
 		if !v(nb) {
 			return false
@@ -30,7 +30,7 @@ func ExampleDepthFirst() {
 	n0.nbs = []graph.Node{n1, n2, n4}
 	n1.nbs = []graph.Node{n2}
 	n2.nbs = []graph.Node{n0, n2, n3}
-	v := func(n graph.Node) bool {
+	v := func(n graph.Node, level int) bool {
 		num := n.(*dfNode).num
 		if num == 4 {
 			return false
