@@ -13,54 +13,58 @@ import (
 
 func ExampleDigraph_depthFirst() {
 	g := adj.Digraph{}
-	g.Link(0, 1, nil)
-	g.Link(0, 2, nil)
-	g.Link(0, 4, nil)
-	g.Link(1, 2, nil)
-	g.Link(2, 0, nil)
-	g.Link(2, 2, nil)
-	g.Link(2, 3, nil)
+	g.Link(5, 6, nil)
+	g.Link(5, 7, nil)
+	g.Link(5, 9, nil)
+	g.Link(6, 7, nil)
+	g.Link(7, 5, nil)
+	g.Link(7, 7, nil)
+	g.Link(7, 8, nil)
 	v := func(n graph.Node, level int) bool {
 		num := n.(*adj.Node).Data.(int)
-		if num == 4 {
+		if num == 9 {
 			return false
 		}
-		fmt.Println(num)
+		fmt.Println(num, "   ", level)
 		return true
 	}
-	fmt.Println(search.DepthFirst(g[0], v))
+	fmt.Println("Node  Level")
+	fmt.Println(search.DepthFirst(g[5], v))
 	// Output:
-	// 0
-	// 1
-	// 2
-	// 3
+	// Node  Level
+	// 5     0
+	// 6     1
+	// 7     2
+	// 8     3
 	// false
 }
 
 func ExampleDigraph_breadthFirst() {
 	g := adj.Digraph{}
-	g.Link(0, 1, nil)
-	g.Link(0, 2, nil)
-	g.Link(0, 4, nil)
-	g.Link(1, 2, nil)
-	g.Link(2, 0, nil)
-	g.Link(2, 2, nil)
-	g.Link(2, 3, nil)
+	g.Link(5, 6, nil)
+	g.Link(5, 7, nil)
+	g.Link(5, 9, nil)
+	g.Link(6, 7, nil)
+	g.Link(7, 5, nil)
+	g.Link(7, 7, nil)
+	g.Link(7, 8, nil)
+	fmt.Println("Node  Level")
 	v := func(n graph.Node, level int) bool {
 		num := n.(*adj.Node).Data.(int)
-		if num == 3 {
+		if num == 8 {
 			return false
 		}
-		fmt.Println(num)
+		fmt.Println(num, "   ", level)
 		return true
 	}
-	_, ok := search.BreadthFirst1(g[0], v)
+	_, ok := search.BreadthFirst1(g[5], v)
 	fmt.Println(ok)
 	// Output:
-	// 0
-	// 1
-	// 2
-	// 4
+	// Node  Level
+	// 5     0
+	// 6     1
+	// 7     1
+	// 9     1
 	// false
 }
 

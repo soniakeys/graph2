@@ -26,28 +26,30 @@ func (n bfsNode) NumAdj() int {
 }
 
 func ExampleBreadthFirst1() {
-	n0 := &bfsNode{num: 0}
-	n1 := &bfsNode{num: 1}
-	n2 := &bfsNode{num: 2}
-	n3 := &bfsNode{num: 3}
-	n4 := &bfsNode{num: 4}
-	n0.nbs = []graph.Node{n1, n2, n4}
-	n1.nbs = []graph.Node{n2}
-	n2.nbs = []graph.Node{n0, n2, n3}
+	n5 := &bfsNode{num: 5}
+	n6 := &bfsNode{num: 6}
+	n7 := &bfsNode{num: 7}
+	n8 := &bfsNode{num: 8}
+	n9 := &bfsNode{num: 9}
+	n5.nbs = []graph.Node{n6, n7, n9}
+	n6.nbs = []graph.Node{n7}
+	n7.nbs = []graph.Node{n5, n7, n8}
+	fmt.Println("Node  Level")
 	v := func(n graph.Node, level int) bool {
 		num := n.(*bfsNode).num
-		if num == 3 {
+		if num == 8 {
 			return false
 		}
-		fmt.Println(num)
+		fmt.Println(num, "   ", level)
 		return true
 	}
-	_, ok := search.BreadthFirst1(n0, v)
+	_, ok := search.BreadthFirst1(n5, v)
 	fmt.Println(ok)
 	// Output:
-	// 0
-	// 1
-	// 2
-	// 4
+	// Node  Level
+	// 5     0
+	// 6     1
+	// 7     1
+	// 9     1
 	// false
 }

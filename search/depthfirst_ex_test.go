@@ -7,11 +7,13 @@ import (
 	"github.com/soniakeys/graph/search"
 )
 
+// dfNode implements graph.Node.
 type dfNode struct {
 	num int
 	nbs []graph.Node
 }
 
+// VisitAdjNodes is the only method needed to satisfy the interface.
 func (n dfNode) VisitAdjNodes(v graph.AdjNodeVisitor) bool {
 	for _, nb := range n.nbs {
 		if !v(nb) {
@@ -22,27 +24,29 @@ func (n dfNode) VisitAdjNodes(v graph.AdjNodeVisitor) bool {
 }
 
 func ExampleDepthFirst() {
-	n0 := &dfNode{num: 0}
-	n1 := &dfNode{num: 1}
-	n2 := &dfNode{num: 2}
-	n3 := &dfNode{num: 3}
-	n4 := &dfNode{num: 4}
-	n0.nbs = []graph.Node{n1, n2, n4}
-	n1.nbs = []graph.Node{n2}
-	n2.nbs = []graph.Node{n0, n2, n3}
+	n5 := &dfNode{num: 5}
+	n6 := &dfNode{num: 6}
+	n7 := &dfNode{num: 7}
+	n8 := &dfNode{num: 8}
+	n9 := &dfNode{num: 9}
+	n5.nbs = []graph.Node{n6, n7, n9}
+	n6.nbs = []graph.Node{n7}
+	n7.nbs = []graph.Node{n5, n7, n8}
+	fmt.Println("Node  Level")
 	v := func(n graph.Node, level int) bool {
 		num := n.(*dfNode).num
-		if num == 4 {
+		if num == 9 {
 			return false
 		}
-		fmt.Println(num)
+		fmt.Println(num, "    ", level)
 		return true
 	}
-	fmt.Println(search.DepthFirst(n0, v))
+	fmt.Println(search.DepthFirst(n5, v))
 	// Output:
-	// 0
-	// 1
-	// 2
-	// 3
+	// Node  Level
+	// 5      0
+	// 6      1
+	// 7      2
+	// 8      3
 	// false
 }

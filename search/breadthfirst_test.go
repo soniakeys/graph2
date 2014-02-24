@@ -120,7 +120,7 @@ func TestBF2_undirected(t *testing.T) {
 	}
 	start := g.nds[17]
 	p, ok := search.BreadthFirst2(g, start, v)
-	if ok { // expecing !ok after curtailing search at level 3
+	if ok { // expecing !ok after curtailing search
 		t.Fatal(ok)
 	}
 	paths := make([]string, len(p))
