@@ -5,4 +5,4 @@ branches:
 language: go
 
 go:
-  - go1.2
+  - go1.2.1
