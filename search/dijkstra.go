@@ -134,15 +134,15 @@ func djk(start, end graph.HalfNode, all bool) (graph.HalfNode, []graph.Half, flo
 			path := make([]graph.Half, i)
 			for i > 0 {
 				i--
-				path[i].Nd = current
 				nd := d[current]
 				path[i].Ed = nd.prevEdge
+				path[i].To = current
 				current = nd.prevNode
 			}
 			return nil, path, distance // success
 		}
 		current.VisitAdjHalfs(func(a graph.Half) {
-			nd := d[a.Nd]
+			nd := d[a.To]
 			if nd.tx < 0 {
 				return // skip nodes already done
 			}
@@ -158,7 +158,7 @@ func djk(start, end graph.HalfNode, all bool) (graph.HalfNode, []graph.Half, flo
 				nt.n = ct.n + 1
 				nd.prevNode = cr
 				nd.prevEdge = a.Ed.(graph.Weighted)
-				d[a.Nd] = nd
+				d[a.To] = nd
 				heap.Fix(h, nt.rx)
 			} else { // nd.tx was zero. this is the first visit to this node.
 				// first find a place for tentPath data
@@ -166,7 +166,7 @@ func djk(start, end graph.HalfNode, all bool) (graph.HalfNode, []graph.Half, flo
 					// nothing on the free list, extend the pool.
 					nd.tx = len(h.pool)
 					h.pool = append(h.pool, tentPath{
-						nd:   a.Nd,
+						nd:   a.To,
 						dist: dist,
 						n:    ct.n + 1})
 				} else { // reuse
@@ -174,14 +174,14 @@ func djk(start, end graph.HalfNode, all bool) (graph.HalfNode, []graph.Half, flo
 					nd.tx = h.free[last]
 					h.free = h.free[:last]
 					h.pool[nd.tx] = tentPath{
-						nd:   a.Nd,
+						nd:   a.To,
 						dist: dist,
 						n:    ct.n + 1}
 				}
 				// push path data to heap
 				nd.prevNode = cr
 				nd.prevEdge = a.Ed.(graph.Weighted)
-				d[a.Nd] = nd
+				d[a.To] = nd
 				heap.Push(h, nd.tx)
 			}
 		})

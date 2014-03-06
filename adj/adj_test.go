@@ -52,7 +52,7 @@ func ExampleDigraph_Link() {
 		line := fmt.Sprintf("adjacent to node %v:", id)
 		nd.VisitAdjHalfs(func(h graph.Half) {
 			// Print a list of neighbors on the same line.
-			line += fmt.Sprintf(" %v", h.Nd)
+			line += fmt.Sprintf(" %v", h.To)
 		})
 		output = append(output, line)
 	}

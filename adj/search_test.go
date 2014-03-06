@@ -132,7 +132,7 @@ func ExampleDigraph_dijkstraAllPaths() {
 		fmt.Println(s)
 		s += " "
 		n.VisitAdjHalfs(func(nb graph.Half) {
-			pp(s, nb.Nd)
+			pp(s, nb.To)
 		})
 	}
 	// run Dijkstra's algorithm to find all shortest paths

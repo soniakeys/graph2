@@ -117,7 +117,12 @@ type AdjHalfVisitor func(Half)
 // the node on the other end of the edge.
 type Half struct {
 	Ed interface{} // arc or edge
-	Nd HalfNode
+	To HalfNode
+}
+
+type FromHalf struct {
+	From HalfNode
+	Ed   interface{} // arc or edge
 }
 
 // Arc and Edge are completely generic to hold any object but are separate

@@ -25,7 +25,7 @@ type Node struct {
 // true after iterating over all adjacent nodes.
 func (n *Node) VisitAdjNodes(v graph.AdjNodeVisitor) bool {
 	for _, h := range n.Nbs {
-		if !v(h.Nd.(*Node)) {
+		if !v(h.To.(*Node)) {
 			return false
 		}
 	}
@@ -98,7 +98,7 @@ func (g Digraph) Link(n1, n2 interface{}, arc graph.Arc) {
 func (n *Node) LinkFrom(prev graph.HalfNode, arc graph.Arc) graph.HalfNode {
 	rn := &Node{Data: n} // create new node referring to receiver.
 	if prev != nil {
-		h := graph.Half{Nd: rn}
+		h := graph.Half{To: rn}
 		if wa, ok := arc.(graph.Weighted); ok {
 			h.Ed = Weighted(wa.Weight()) // create arc if meaningful
 		}
@@ -113,14 +113,14 @@ func (n *Node) LinkFrom(prev graph.HalfNode, arc graph.Arc) graph.HalfNode {
 func (n *Node) Span(prev graph.HalfNode, ed graph.Edge) graph.HalfNode {
 	rn := &Node{Data: n} // create new node referring to receiver.
 	if prev != nil {
-		h := graph.Half{Nd: rn}
+		h := graph.Half{To: rn}
 		if we, ok := ed.(graph.Weighted); ok {
 			h.Ed = Weighted(we.Weight()) // create edge if meaningful
 		}
 		pn := prev.(*Node)
 		pn.Nbs = append(pn.Nbs, h)
 		// above code same as LinkFrom.  two lines below are new.
-		h.Nd = prev
+		h.To = prev
 		rn.Nbs = []graph.Half{h}
 	}
 	return rn

@@ -30,7 +30,7 @@ func (n *dapNode) VisitAdjHalfs(v graph.AdjHalfVisitor) {
 func (n *dapNode) LinkFrom(prev graph.HalfNode, arc graph.Arc) graph.HalfNode {
 	rn := &arborNode{dap: n} // create new node referring to receiver.
 	if prev != nil {
-		a := graph.Half{Nd: rn}
+		a := graph.Half{To: rn}
 		if wa, ok := arc.(graph.Weighted); ok {
 			a.Ed = dapArc(wa.Weight()) // create arc if meaningful
 		}
@@ -95,7 +95,7 @@ func ExampleDijkstraAllPaths() {
 		fmt.Println(s)
 		s += " "
 		n.VisitAdjHalfs(func(nb graph.Half) {
-			pp(s, nb.Nd)
+			pp(s, nb.To)
 		})
 	}
 	// run Dijkstra's algorithm to find all shortest paths

@@ -75,8 +75,8 @@ func AStarA(start, end graph.EstimateNode) ([]graph.Half, float64) {
 			return path, dist
 		}
 		bestNode.VisitAdjHalfs(func(nb graph.Half) {
-			nd := nb.Nd.(graph.EstimateNode)
 			ed := nb.Ed.(graph.Weighted)
+			nd := nb.To.(graph.EstimateNode)
 			g := bestPath.g + ed.Weight()
 			if alt, reached := r[nd]; reached {
 				if g > alt.g {
@@ -161,8 +161,8 @@ func AStarM(start, end graph.EstimateNode) ([]graph.Half, float64) {
 		closed[bestNode] = struct{}{}
 
 		bestNode.VisitAdjHalfs(func(nb graph.Half) {
-			nd := nb.Nd.(graph.EstimateNode)
 			ed := nb.Ed.(graph.Weighted)
+			nd := nb.To.(graph.EstimateNode)
 
 			// difference from AStarA:
 			// Monotonicity means that f cannot be improved.
