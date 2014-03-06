@@ -5,6 +5,7 @@ package adj_test
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/soniakeys/graph"
 	"github.com/soniakeys/graph/adj"
@@ -125,23 +126,30 @@ func ExampleDigraph_dijkstraAllPaths() {
 	g.Link("c", "f", adj.Weighted(2))
 	g.Link("d", "e", adj.Weighted(6))
 	g.Link("e", "f", adj.Weighted(9))
-	// a recursive function to print paths
-	var pp func(string, graph.HalfNode)
-	pp = func(s string, n graph.HalfNode) {
-		s += fmt.Sprint(n)
-		fmt.Println(s)
-		s += " "
-		n.VisitAdjHalfs(func(nb graph.Half) {
-			pp(s, nb.To)
-		})
-	}
 	// run Dijkstra's algorithm to find all shortest paths
-	pp("", search.DijkstraAllPaths(g["a"]))
+	from := search.DijkstraAllPaths(g["a"])
+	// format output by walking each node of the result back to start
+	as := make([]string, len(from))
+	i := 0
+	for nd, fh := range from {
+		s := fmt.Sprint(nd)
+		for fh.From != nil {
+			s = fmt.Sprintf("%s %g %s", fh.From, fh.Ed, s)
+			fh = from[fh.From]
+		}
+		as[i] = s
+		i++
+	}
+	// sort for test repeatability
+	sort.Strings(as)
+	for _, s := range as {
+		fmt.Println(s)
+	}
 	// Output:
 	// a
-	// a b
-	// a c
-	// a c f
-	// a c d
-	// a c d e
+	// a 7 b
+	// a 9 c
+	// a 9 c 11 d
+	// a 9 c 11 d 6 e
+	// a 9 c 2 f
 }

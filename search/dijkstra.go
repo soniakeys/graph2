@@ -31,21 +31,20 @@ func DijkstraShortestPath(start, end graph.HalfNode) ([]graph.Half, float64) {
 	return path, dist
 }
 
-// DijkstraAllPaths returns an arborescence, or directed spanning tree,
-// encoding the shortest paths from the start node to all other nodes
-// in a graph.
+// DijkstraAllPaths finds the shortest paths from the start node to all other
+// nodes in a graph, where path length is the sum of edge weights.
 //
-// Adj relationships between nodes can represent a general directed or
-// undirected graph.  The path length minimized is the sum of edge weights.
+// Adjacency relationships between nodes can represent a general directed or
+// undirected graph.
 //
-// Argument start must implement graph.ArborNode.  Edges connecting nodes
-// must implement graph.Weighted.  Weights must be non-negative and
-// must not be an Inf or NaN.
+// Edges connecting nodes must implement graph.Weighted.
+// Weights must be non-negative and must not be an Inf or NaN.
 //
-// The arborescence is constructed by calling the LinkFrom method on the
-// nodes of the graph.  The root of the tree corresponds to start, and the
-// function returns this root.
-func DijkstraAllPaths(start graph.ArborNode) graph.HalfNode {
+// The result map has a key for each node reachable from the start node.
+// The element value of each key is a half edge representing the previous
+// node along the shortest path.  The start node is included in the result,
+// with a zero value element.
+func DijkstraAllPaths(start graph.HalfNode) map[graph.HalfNode]graph.FromHalf {
 	tree, _, _ := djk(start, nil, true)
 	return tree
 }
@@ -66,11 +65,6 @@ func DijkstraAllPaths(start graph.ArborNode) graph.HalfNode {
 type dijkstra struct {
 	// status/index of tentPath in pool that backs heap
 	tx int
-	// path back to start, either by nodes of the original graph or by
-	// nodes of the arborescence under construction
-	prevNode graph.HalfNode
-	// edge from prevNode to the node of this struct
-	prevEdge graph.Weighted
 }
 
 // tentPath holds additional data for a node in the "tentative set".
@@ -109,20 +103,14 @@ func (h *tentHeap) Pop() interface{} {
 	return tx
 }
 
-func djk(start, end graph.HalfNode, all bool) (graph.HalfNode, []graph.Half, float64) {
+func djk(start, end graph.HalfNode, all bool) (map[graph.HalfNode]graph.FromHalf, []graph.Half, float64) {
 	if start == nil {
 		return nil, nil, math.Inf(1)
 	}
 	current := start
-	var stRoot, cr graph.HalfNode
-	if all {
-		stRoot = start.(graph.ArborNode).LinkFrom(nil, nil)
-		cr = stRoot
-	} else {
-		cr = current
-	}
 	cd := dijkstra{tx: -1} // mark start done.  it skips the heap.
-	d := map[graph.HalfNode]dijkstra{current: cd}
+	d := map[graph.HalfNode]dijkstra{start: cd}
+	prev := map[graph.HalfNode]graph.FromHalf{start: graph.FromHalf{}}
 	ct := tentPath{n: 1} // path length 1 for start node
 	h := &tentHeap{
 		pool: make([]tentPath, 1)} // zero element unused
@@ -134,10 +122,10 @@ func djk(start, end graph.HalfNode, all bool) (graph.HalfNode, []graph.Half, flo
 			path := make([]graph.Half, i)
 			for i > 0 {
 				i--
-				nd := d[current]
-				path[i].Ed = nd.prevEdge
+				from := prev[current]
+				path[i].Ed = from.Ed
 				path[i].To = current
-				current = nd.prevNode
+				current = from.From
 			}
 			return nil, path, distance // success
 		}
@@ -156,8 +144,7 @@ func djk(start, end graph.HalfNode, all bool) (graph.HalfNode, []graph.Half, flo
 				// other path to this node.  record new path data and reheap.
 				nt.dist = dist
 				nt.n = ct.n + 1
-				nd.prevNode = cr
-				nd.prevEdge = a.Ed.(graph.Weighted)
+				prev[a.To] = graph.FromHalf{current, a.Ed}
 				d[a.To] = nd
 				heap.Fix(h, nt.rx)
 			} else { // nd.tx was zero. this is the first visit to this node.
@@ -179,14 +166,14 @@ func djk(start, end graph.HalfNode, all bool) (graph.HalfNode, []graph.Half, flo
 						n:    ct.n + 1}
 				}
 				// push path data to heap
-				nd.prevNode = cr
-				nd.prevEdge = a.Ed.(graph.Weighted)
+				prev[a.To] = graph.FromHalf{current, a.Ed}
 				d[a.To] = nd
 				heap.Push(h, nd.tx)
 			}
 		})
 		if len(h.heap) == 0 {
-			return stRoot, nil, math.Inf(1)
+			//			return stRoot, nil, math.Inf(1)
+			return prev, nil, math.Inf(1)
 		}
 		// new current is node with smallest tentative distance
 		ctx := heap.Pop(h).(int)
@@ -196,10 +183,5 @@ func djk(start, end graph.HalfNode, all bool) (graph.HalfNode, []graph.Half, flo
 		h.free = append(h.free, ctx) // recycle tentPath struct
 		cd.tx = -1                   // done
 		d[current] = cd              // store the -1
-		if all {
-			cr = current.(graph.ArborNode).LinkFrom(cd.prevNode, cd.prevEdge)
-		} else {
-			cr = current
-		}
 	}
 }

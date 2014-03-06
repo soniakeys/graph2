@@ -13,7 +13,7 @@ import (
 // DijkstraShortestPath requires a node type that implements graph.AdjNode
 // and an edge type that implements graph.Weighted.  Our two types look
 // the same as for the directed example but we will implement edges with
-// reciprocal Adjs referencing a common edge object.
+// reciprocal half arcs referencing a common edge object.
 
 type (
 	uNode struct {

@@ -13,7 +13,7 @@ import (
 
 // Node represents a node in an adjacency graph, either directed or undirected.
 // It implements (for example) graph.Node, graph.HalfNode, graph.EstimateNode,
-// graph.ArborNode, graph.SpannerNode and fmt.Stringer.
+// and fmt.Stringer.
 type Node struct {
 	Data interface{}
 	Nbs  []graph.Half
@@ -91,39 +91,6 @@ func (g Digraph) Link(n1, n2 interface{}, arc graph.Arc) {
 	} else {
 		nd1.Nbs = append(nd1.Nbs, graph.Half{arc, nd2})
 	}
-}
-
-// LinkFrom lets Node satisfy graph.ArborNode, to enable creation of an
-// arborescence on top of a graph.
-func (n *Node) LinkFrom(prev graph.HalfNode, arc graph.Arc) graph.HalfNode {
-	rn := &Node{Data: n} // create new node referring to receiver.
-	if prev != nil {
-		h := graph.Half{To: rn}
-		if wa, ok := arc.(graph.Weighted); ok {
-			h.Ed = Weighted(wa.Weight()) // create arc if meaningful
-		}
-		pn := prev.(*Node)
-		pn.Nbs = append(pn.Nbs, h)
-	}
-	return rn
-}
-
-// Span lets Node satisfy graph.SpannerNode, to enable creation of a
-// spanning tree on top of a graph.
-func (n *Node) Span(prev graph.HalfNode, ed graph.Edge) graph.HalfNode {
-	rn := &Node{Data: n} // create new node referring to receiver.
-	if prev != nil {
-		h := graph.Half{To: rn}
-		if we, ok := ed.(graph.Weighted); ok {
-			h.Ed = Weighted(we.Weight()) // create edge if meaningful
-		}
-		pn := prev.(*Node)
-		pn.Nbs = append(pn.Nbs, h)
-		// above code same as LinkFrom.  two lines below are new.
-		h.To = prev
-		rn.Nbs = []graph.Half{h}
-	}
-	return rn
 }
 
 type Graph struct {

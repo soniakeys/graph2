@@ -5,12 +5,13 @@ package search_test
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/soniakeys/graph"
 	"github.com/soniakeys/graph/search"
 )
 
-// DijkstraAllPaths requires a node type that implements graph.ArborNode
+// DijkstraAllPaths requires a node type that implements graph.HalfNode
 // and an edge type that implements graph.Weighted.  Our two types:
 
 type (
@@ -21,50 +22,21 @@ type (
 	dapArc float64
 )
 
-// Two methods implement graph.ArborNode.
-func (n *dapNode) VisitAdjHalfs(v graph.AdjHalfVisitor) {
+// One method implements graph.HalfNode.
+func (n dapNode) VisitAdjHalfs(v graph.AdjHalfVisitor) {
 	for _, a := range n.nbs {
 		v(a)
 	}
-}
-func (n *dapNode) LinkFrom(prev graph.HalfNode, arc graph.Arc) graph.HalfNode {
-	rn := &arborNode{dap: n} // create new node referring to receiver.
-	if prev != nil {
-		a := graph.Half{To: rn}
-		if wa, ok := arc.(graph.Weighted); ok {
-			a.Ed = dapArc(wa.Weight()) // create arc if meaningful
-		}
-		pn := prev.(*arborNode)
-		pn.nbs = append(pn.nbs, a)
-	}
-	return rn
-}
-
-// The node type for the arborescence can be merged with the node type of
-// the underlying tree; see DijkstraAllPaths example in package graph/adj
-// for example.  Here though we define a separate type to illustrate the
-// separate roles.
-type arborNode struct {
-	dap *dapNode     // reference to the original graph
-	nbs []graph.Half // branches from this node in the arboresence
-}
-
-// Satisfy graph.AdjNode.  (arborNode does not need to satisfy
-// graph.ArborNode, the original graph nodes do.)
-func (n *arborNode) VisitAdjHalfs(v graph.AdjHalfVisitor) {
-	for _, a := range n.nbs {
-		v(a)
-	}
-}
-
-// Implement fmt.Stringer on arborNode.  These are the nodes we will output.
-func (n *arborNode) String() string {
-	return n.dap.name // pull node name from original graph node
 }
 
 // One method implements graph.Weighted.
 func (a dapArc) Weight() float64 {
 	return float64(a)
+}
+
+// Another method on dapNode implements fmt.Stringer
+func (n dapNode) String() string {
+	return n.name
 }
 
 // One more method on dapNode to make graph construction easy.
@@ -88,23 +60,30 @@ func ExampleDijkstraAllPaths() {
 	c.link(f, 2)
 	d.link(e, 6)
 	e.link(f, 9)
-	// a recursive function to print paths
-	var pp func(string, graph.HalfNode)
-	pp = func(s string, n graph.HalfNode) {
-		s += fmt.Sprint(n)
-		fmt.Println(s)
-		s += " "
-		n.VisitAdjHalfs(func(nb graph.Half) {
-			pp(s, nb.To)
-		})
-	}
 	// run Dijkstra's algorithm to find all shortest paths
-	pp("", search.DijkstraAllPaths(a))
+	from := search.DijkstraAllPaths(a)
+	// format output by walking each node of the result back to start
+	as := make([]string, len(from))
+	i := 0
+	for nd, fh := range from {
+		s := fmt.Sprint(nd)
+		for fh.From != nil {
+			s = fmt.Sprintf("%s %g %s", fh.From, fh.Ed, s)
+			fh = from[fh.From]
+		}
+		as[i] = s
+		i++
+	}
+	// sort for test repeatability
+	sort.Strings(as)
+	for _, s := range as {
+		fmt.Println(s)
+	}
 	// Output:
 	// a
-	// a b
-	// a c
-	// a c f
-	// a c d
-	// a c d e
+	// a 7 b
+	// a 9 c
+	// a 9 c 11 d
+	// a 9 c 11 d 6 e
+	// a 9 c 2 f
 }
