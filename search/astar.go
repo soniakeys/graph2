@@ -93,7 +93,7 @@ func AStarA(start, end graph.EstimateNode) ([]graph.Half, float64) {
 				alt.prevNode = bestPath
 				alt.prevEdge = ed
 				alt.g = g
-				alt.f = g + alt.nd.Estimate(end)
+				alt.f = g + nd.Estimate(end)
 				alt.n = bestPath.n + 1
 				if alt.rx < 0 {
 					heap.Push(&oh, alt)
@@ -107,7 +107,7 @@ func AStarA(start, end graph.EstimateNode) ([]graph.Half, float64) {
 					prevNode: bestPath,
 					prevEdge: ed,
 					g:        g,
-					f:        g + start.Estimate(end),
+					f:        g + nd.Estimate(end),
 					n:        bestPath.n + 1,
 				}
 				r[nd] = p         // add to list of reached nodes
@@ -186,7 +186,7 @@ func AStarM(start, end graph.EstimateNode) ([]graph.Half, float64) {
 				alt.prevNode = bestPath
 				alt.prevEdge = ed
 				alt.g = g
-				alt.f = g + alt.nd.Estimate(end)
+				alt.f = g + nd.Estimate(end)
 				alt.n = bestPath.n + 1
 
 				// difference from AStarA:
@@ -200,7 +200,7 @@ func AStarM(start, end graph.EstimateNode) ([]graph.Half, float64) {
 					prevNode: bestPath,
 					prevEdge: ed,
 					g:        g,
-					f:        g + start.Estimate(end),
+					f:        g + nd.Estimate(end),
 					n:        bestPath.n + 1,
 				}
 				open[nd] = p      // new node is now open for exploration.
