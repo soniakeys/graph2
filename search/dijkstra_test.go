@@ -86,17 +86,17 @@ func r(nNodes, nArcs int, seed int64) (start, end *stNode) {
 		nodes[i].y = s.Float64()
 	}
 	// random start
-    start = &nodes[s.Intn(nNodes)]
-    // end is point at distance nearest target distance
-    const target = .3
-    nearest := 2.
-    for i, n2 := range nodes {
-        d := math.Abs(target - math.Hypot(n2.x-start.x, n2.y-start.y))
-        if d < nearest {
-            end = &nodes[i]
-            nearest = d
-        }
-    }
+	start = &nodes[s.Intn(nNodes)]
+	// end is point at distance nearest target distance
+	const target = .3
+	nearest := 2.
+	for i, n2 := range nodes {
+		d := math.Abs(target - math.Hypot(n2.x-start.x, n2.y-start.y))
+		if d < nearest {
+			end = &nodes[i]
+			nearest = d
+		}
+	}
 generateArcs:
 	for i := 0; i < nArcs; {
 		n1 := s.Intn(nNodes)
@@ -122,9 +122,9 @@ generateArcs:
 }
 
 func Test100(t *testing.T) {
-    start, end := r(100, 200, 62)
-    t.Log(search.DijkstraShortestPath(start, end))
-    t.Log(search.DijkstraShortestPath(start, end))
+	start, end := r(100, 200, 62)
+	t.Log(search.DijkstraShortestPath(start, end))
+	t.Log(search.DijkstraShortestPath(start, end))
 }
 
 func Benchmark100(b *testing.B) {
