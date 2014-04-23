@@ -6,30 +6,30 @@ package search_test
 import (
 	"fmt"
 
-	"github.com/soniakeys/graph"
-	"github.com/soniakeys/graph/search"
+	"github.com/soniakeys/graph2"
+	"github.com/soniakeys/graph2/search"
 )
 
-// AStarA requires a node type that implements graph.EstimateNode and an
-// edge type that implements graph.Weighted.  Our two types:
+// AStarA requires a node type that implements graph2.EstimateNode and an
+// edge type that implements graph2.Weighted.  Our two types:
 type (
 	estNode struct {
 		name string       // node name
 		h    float64      // heuristic distance estimate to end node
-		nbs  []graph.Half // "neighbors," adjacent arcs and nodes
+		nbs  []graph2.Half // "neighbors," adjacent arcs and nodes
 	}
 	estArc float64
 )
 
-// Two methods implement graph.Estimator.
-func (n *estNode) VisitAdjHalfs(v graph.AdjHalfVisitor) {
+// Two methods implement graph2.Estimator.
+func (n *estNode) VisitAdjHalfs(v graph2.AdjHalfVisitor) {
 	for _, a := range n.nbs {
 		v(a)
 	}
 }
-func (n *estNode) Estimate(graph.EstimateNode) float64 { return n.h }
+func (n *estNode) Estimate(graph2.EstimateNode) float64 { return n.h }
 
-// One method implements graph.Weighted.
+// One method implements graph2.Weighted.
 func (a estArc) Weight() float64 {
 	return float64(a)
 }
@@ -39,7 +39,7 @@ func (n *estNode) String() string { return n.name }
 
 // One more method to make graph construction easy.
 func (n *estNode) link(n2 *estNode, weight int) {
-	n.nbs = append(n.nbs, graph.Half{estArc(weight), n2})
+	n.nbs = append(n.nbs, graph2.Half{estArc(weight), n2})
 }
 
 func ExampleAStarA() {

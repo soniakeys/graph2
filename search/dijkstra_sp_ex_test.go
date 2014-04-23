@@ -6,29 +6,29 @@ package search_test
 import (
 	"fmt"
 
-	"github.com/soniakeys/graph"
-	"github.com/soniakeys/graph/search"
+	"github.com/soniakeys/graph2"
+	"github.com/soniakeys/graph2/search"
 )
 
-// DijkstraShortestPath requires a node type that implements graph.AdjNode
-// and an edge type that implements graph.Weighted.  Our two types:
+// DijkstraShortestPath requires a node type that implements graph2.AdjNode
+// and an edge type that implements graph2.Weighted.  Our two types:
 
 type (
 	dspNode struct {
 		name string       // node name
-		nbs  []graph.Half // "neighbors," adjacent arcs and nodes
+		nbs  []graph2.Half // "neighbors," adjacent arcs and nodes
 	}
 	dspArc float64
 )
 
-// One method implements graph.AdjNode.
-func (n *dspNode) VisitAdjHalfs(v graph.AdjHalfVisitor) {
+// One method implements graph2.AdjNode.
+func (n *dspNode) VisitAdjHalfs(v graph2.AdjHalfVisitor) {
 	for _, a := range n.nbs {
 		v(a)
 	}
 }
 
-// One method implements graph.Weighted.
+// One method implements graph2.Weighted.
 func (a dspArc) Weight() float64 {
 	return float64(a)
 }
@@ -38,7 +38,7 @@ func (n *dspNode) String() string { return n.name }
 
 // One more method to make graph construction easy.
 func (n *dspNode) link(n2 *dspNode, weight int) {
-	n.nbs = append(n.nbs, graph.Half{dspArc(weight), n2})
+	n.nbs = append(n.nbs, graph2.Half{dspArc(weight), n2})
 }
 
 func ExampleDijkstraShortestPath_directed() {

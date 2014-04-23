@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/soniakeys/graph"
-	"github.com/soniakeys/graph/adj"
+	"github.com/soniakeys/graph2"
+	"github.com/soniakeys/graph2/adj"
 )
 
 func ExampleNode_VisitAdjNodes() {
@@ -13,7 +13,7 @@ func ExampleNode_VisitAdjNodes() {
 	g.Link(0, 1, nil)
 	g.Link(0, 2, nil)
 	g.Link(0, 3, nil)
-	v := func(n graph.Node) bool {
+	v := func(n graph2.Node) bool {
 		num := n.(*adj.Node).Data.(int)
 		if num == 3 {
 			return false
@@ -29,8 +29,8 @@ func ExampleNode_VisitAdjNodes() {
 }
 
 func ExampleWeighted_Weight() {
-	// Example shows that adj.Weighted implements graph.Weighted.
-	var a graph.Weighted
+	// Example shows that adj.Weighted implements graph2.Weighted.
+	var a graph2.Weighted
 	a = adj.Weighted(4)
 	fmt.Println(a.Weight())
 	// Output:
@@ -50,7 +50,7 @@ func ExampleDigraph_Link() {
 	for id, nd := range g {
 		// For each node, print the node.
 		line := fmt.Sprintf("adjacent to node %v:", id)
-		nd.VisitAdjHalfs(func(h graph.Half) {
+		nd.VisitAdjHalfs(func(h graph2.Half) {
 			// Print a list of neighbors on the same line.
 			line += fmt.Sprintf(" %v", h.To)
 		})

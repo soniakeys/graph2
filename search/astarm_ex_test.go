@@ -6,30 +6,30 @@ package search_test
 import (
 	"fmt"
 
-	"github.com/soniakeys/graph"
-	"github.com/soniakeys/graph/search"
+	"github.com/soniakeys/graph2"
+	"github.com/soniakeys/graph2/search"
 )
 
-// AStarM requires a node type that implements graph.EstimateNode and an
-// edge type that implements graph.Weighted.  Our two types:
+// AStarM requires a node type that implements graph2.EstimateNode and an
+// edge type that implements graph2.Weighted.  Our two types:
 type (
 	monoNode struct {
 		name string       // node name
 		h    float64      // heuristic distance estimate to end node
-		nbs  []graph.Half // "neighbors," adjacent arcs and nodes
+		nbs  []graph2.Half // "neighbors," adjacent arcs and nodes
 	}
 	monoArc float64
 )
 
-// Two methods implement graph.Estimator.
-func (n *monoNode) VisitAdjHalfs(v graph.AdjHalfVisitor) {
+// Two methods implement graph2.Estimator.
+func (n *monoNode) VisitAdjHalfs(v graph2.AdjHalfVisitor) {
 	for _, a := range n.nbs {
 		v(a)
 	}
 }
-func (n *monoNode) Estimate(graph.EstimateNode) float64 { return n.h }
+func (n *monoNode) Estimate(graph2.EstimateNode) float64 { return n.h }
 
-// One method implements graph.Weighted.
+// One method implements graph2.Weighted.
 func (a monoArc) Weight() float64 {
 	return float64(a)
 }
@@ -39,7 +39,7 @@ func (n *monoNode) String() string { return n.name }
 
 // One more method to make graph construction easy.
 func (n *monoNode) link(n2 *monoNode, weight int) {
-	n.nbs = append(n.nbs, graph.Half{monoArc(weight), n2})
+	n.nbs = append(n.nbs, graph2.Half{monoArc(weight), n2})
 }
 
 func ExampleAStarM() {

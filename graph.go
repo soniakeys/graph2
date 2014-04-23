@@ -1,7 +1,7 @@
 // Copyright 2014 Sonia Keys
 // License MIT: http://opensource.org/licenses/MIT
 
-package graph
+package graph2
 
 // A Node represents an adjacency relationship to other nodes
 //

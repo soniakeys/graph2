@@ -6,30 +6,30 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/soniakeys/graph"
-	"github.com/soniakeys/graph/search"
+	"github.com/soniakeys/graph2"
+	"github.com/soniakeys/graph2/search"
 )
 
 type bfuNode struct {
 	num int
-	nbs []graph.BF2Node
+	nbs []graph2.BF2Node
 }
 
-func (n bfuNode) VisitBF2In(v graph.BF2NeighborVisitor) bool {
+func (n bfuNode) VisitBF2In(v graph2.BF2NeighborVisitor) bool {
 	for _, nb := range n.nbs {
 		switch v(nb) {
-		case graph.BF2Stop:
+		case graph2.BF2Stop:
 			return false
-		case graph.BF2Found:
+		case graph2.BF2Found:
 			return true
 		}
 	}
 	return true
 }
 
-func (n bfuNode) VisitBF2Out(v graph.BF2NeighborVisitor) bool {
+func (n bfuNode) VisitBF2Out(v graph2.BF2NeighborVisitor) bool {
 	for _, nb := range n.nbs {
-		if v(nb) == graph.BF2Stop {
+		if v(nb) == graph2.BF2Stop {
 			return false
 		}
 	}
@@ -50,8 +50,8 @@ type bfuGraph struct {
 }
 
 func (g bfuGraph) NumEdges() int { return g.ned }
-func (g bfuGraph) Nodes() map[graph.BF2Node]struct{} {
-	m := make(map[graph.BF2Node]struct{}, len(g.nds))
+func (g bfuGraph) Nodes() map[graph2.BF2Node]struct{} {
+	m := make(map[graph2.BF2Node]struct{}, len(g.nds))
 	for _, n := range g.nds {
 		m[n] = struct{}{}
 	}
@@ -115,7 +115,7 @@ func TestBF2_undirected(t *testing.T) {
 	g.link(25, 32)
 	g.link(33, 32)
 	// test is to list paths up to two levels from node 17
-	v := func(n graph.BF2Node, l int) (ok bool) {
+	v := func(n graph2.BF2Node, l int) (ok bool) {
 		return l <= 2
 	}
 	start := g.nds[17]

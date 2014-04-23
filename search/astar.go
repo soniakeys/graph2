@@ -7,7 +7,7 @@ import (
 	"container/heap"
 	"math"
 
-	"github.com/soniakeys/graph"
+	"github.com/soniakeys/graph2"
 )
 
 // AStarA finds a path between two nodes.
@@ -33,18 +33,18 @@ import (
 // heuristic is likely to find a very good path, if not the best.  Quality
 // of the path returned degrades gracefully with the quality of the heuristic.
 //
-// Arguments start and end must implement graph.EstimateNode.  Edges returned
-// from these objects must implement graph.Weighted.  Weights must be
+// Arguments start and end must implement graph2.EstimateNode.  Edges returned
+// from these objects must implement graph2.Weighted.  Weights must be
 // non-negative and must not be an Inf or NaN.
 //
-// The found path is returned as a graph.Half slice.  The first
+// The found path is returned as a graph2.Half slice.  The first
 // element of this slice will be the start node.  (The edge member will be nil,
 // as there is no edge that needs to be identified going to the start node.)
 // Remaining elements give the found path of edges and nodes.
 // Also returned is the total path length.  If the end node cannot be reached
 // from the start node, the returned Half list will be nil and the path
 // length +Inf.
-func AStarA(start, end graph.EstimateNode) ([]graph.Half, float64) {
+func AStarA(start, end graph2.EstimateNode) ([]graph2.Half, float64) {
 	// start node is reached initially
 	p := &rNode{
 		nd: start,
@@ -54,7 +54,7 @@ func AStarA(start, end graph.EstimateNode) ([]graph.Half, float64) {
 	// r is a list of all nodes reached so far.
 	// the chain of nodes following the prev member represents the
 	// best path found so far from the start to this node.
-	r := map[graph.EstimateNode]*rNode{start: p}
+	r := map[graph2.EstimateNode]*rNode{start: p}
 	// oh is a heap of nodes "open" for exploration.  nodes go on the heap
 	// when they get an initial or new "g" path distance, and therefore a
 	// new "f" which serves as priority for exploration.
@@ -66,17 +66,17 @@ func AStarA(start, end graph.EstimateNode) ([]graph.Half, float64) {
 			// done
 			dist := bestPath.g
 			i := bestPath.n
-			path := make([]graph.Half, i)
+			path := make([]graph2.Half, i)
 			for i > 0 {
 				i--
-				path[i] = graph.Half{bestPath.prevEdge, bestPath.nd}
+				path[i] = graph2.Half{bestPath.prevEdge, bestPath.nd}
 				bestPath = bestPath.prevNode
 			}
 			return path, dist
 		}
-		bestNode.VisitAdjHalfs(func(nb graph.Half) {
-			ed := nb.Ed.(graph.Weighted)
-			nd := nb.To.(graph.EstimateNode)
+		bestNode.VisitAdjHalfs(func(nb graph2.Half) {
+			ed := nb.Ed.(graph2.Weighted)
+			nd := nb.To.(graph2.EstimateNode)
 			g := bestPath.g + ed.Weight()
 			if alt, reached := r[nd]; reached {
 				if g > alt.g {
@@ -123,7 +123,7 @@ func AStarA(start, end graph.EstimateNode) ([]graph.Half, float64) {
 // An admissable estimate may further be monotonic.  Monotonic means that if
 // node B is adjacent to node A with edge AB, then
 // A.Estimate(C) <= AB.Weight() + B.Estimate(C).
-func AStarM(start, end graph.EstimateNode) ([]graph.Half, float64) {
+func AStarM(start, end graph2.EstimateNode) ([]graph2.Half, float64) {
 	p := &rNode{
 		nd: start,
 		f:  start.Estimate(end),
@@ -135,8 +135,8 @@ func AStarM(start, end graph.EstimateNode) ([]graph.Half, float64) {
 	// lists, open and closed. open contains nodes "open" for exploration.
 	// nodes are added to the list as they are reached, then moved to
 	// closed as they are found to be on the best path.
-	open := map[graph.EstimateNode]*rNode{start: p}
-	closed := map[graph.EstimateNode]struct{}{}
+	open := map[graph2.EstimateNode]*rNode{start: p}
+	closed := map[graph2.EstimateNode]struct{}{}
 
 	oh := openHeap{p}
 	for len(oh) > 0 {
@@ -146,10 +146,10 @@ func AStarM(start, end graph.EstimateNode) ([]graph.Half, float64) {
 			// done
 			dist := bestPath.g
 			i := bestPath.n
-			path := make([]graph.Half, i)
+			path := make([]graph2.Half, i)
 			for bestPath != nil {
 				i--
-				path[i] = graph.Half{bestPath.prevEdge, bestPath.nd}
+				path[i] = graph2.Half{bestPath.prevEdge, bestPath.nd}
 				bestPath = bestPath.prevNode
 			}
 			return path, dist
@@ -160,9 +160,9 @@ func AStarM(start, end graph.EstimateNode) ([]graph.Half, float64) {
 		delete(open, bestNode)
 		closed[bestNode] = struct{}{}
 
-		bestNode.VisitAdjHalfs(func(nb graph.Half) {
-			ed := nb.Ed.(graph.Weighted)
-			nd := nb.To.(graph.EstimateNode)
+		bestNode.VisitAdjHalfs(func(nb graph2.Half) {
+			ed := nb.Ed.(graph2.Weighted)
+			nd := nb.To.(graph2.EstimateNode)
 
 			// difference from AStarA:
 			// Monotonicity means that f cannot be improved.
@@ -213,9 +213,9 @@ func AStarM(start, end graph.EstimateNode) ([]graph.Half, float64) {
 
 // rNode holds data for a "reached" node
 type rNode struct {
-	nd       graph.EstimateNode
+	nd       graph2.EstimateNode
 	prevNode *rNode         // chain encodes path back to start
-	prevEdge graph.Weighted // edge from prevNode to the node of this struct
+	prevEdge graph2.Weighted // edge from prevNode to the node of this struct
 	g        float64        // "g" best known path distance from start node
 	f        float64        // "g+h", path dist + heuristic estimate
 	n        int            // number of nodes in path

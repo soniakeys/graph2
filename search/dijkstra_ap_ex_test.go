@@ -7,29 +7,29 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/soniakeys/graph"
-	"github.com/soniakeys/graph/search"
+	"github.com/soniakeys/graph2"
+	"github.com/soniakeys/graph2/search"
 )
 
-// DijkstraAllPaths requires a node type that implements graph.HalfNode
-// and an edge type that implements graph.Weighted.  Our two types:
+// DijkstraAllPaths requires a node type that implements graph2.HalfNode
+// and an edge type that implements graph2.Weighted.  Our two types:
 
 type (
 	dapNode struct {
 		name string       // node name
-		nbs  []graph.Half // "neighbors," adjacent arcs and nodes
+		nbs  []graph2.Half // "neighbors," adjacent arcs and nodes
 	}
 	dapArc float64
 )
 
-// One method implements graph.HalfNode.
-func (n dapNode) VisitAdjHalfs(v graph.AdjHalfVisitor) {
+// One method implements graph2.HalfNode.
+func (n dapNode) VisitAdjHalfs(v graph2.AdjHalfVisitor) {
 	for _, a := range n.nbs {
 		v(a)
 	}
 }
 
-// One method implements graph.Weighted.
+// One method implements graph2.Weighted.
 func (a dapArc) Weight() float64 {
 	return float64(a)
 }
@@ -41,7 +41,7 @@ func (n dapNode) String() string {
 
 // One more method on dapNode to make graph construction easy.
 func (n *dapNode) link(n2 *dapNode, weight int) {
-	n.nbs = append(n.nbs, graph.Half{dapArc(weight), n2})
+	n.nbs = append(n.nbs, graph2.Half{dapArc(weight), n2})
 }
 
 func ExampleDijkstraAllPaths() {

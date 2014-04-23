@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/soniakeys/graph"
-	"github.com/soniakeys/graph/adj"
-	"github.com/soniakeys/graph/search"
+	"github.com/soniakeys/graph2"
+	"github.com/soniakeys/graph2/adj"
+	"github.com/soniakeys/graph2/search"
 )
 
 func ExampleDigraph_depthFirst() {
@@ -21,7 +21,7 @@ func ExampleDigraph_depthFirst() {
 	g.Link(7, 5, nil)
 	g.Link(7, 7, nil)
 	g.Link(7, 8, nil)
-	v := func(n graph.Node, level int) bool {
+	v := func(n graph2.Node, level int) bool {
 		num := n.(*adj.Node).Data.(int)
 		if num == 9 {
 			return false
@@ -50,7 +50,7 @@ func ExampleDigraph_breadthFirst() {
 	g.Link(7, 7, nil)
 	g.Link(7, 8, nil)
 	fmt.Println("Node  Level")
-	v := func(n graph.Node, level int) bool {
+	v := func(n graph2.Node, level int) bool {
 		num := n.(*adj.Node).Data.(int)
 		if num == 8 {
 			return false

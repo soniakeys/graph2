@@ -9,14 +9,14 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/soniakeys/graph"
-	"github.com/soniakeys/graph/search"
+	"github.com/soniakeys/graph2"
+	"github.com/soniakeys/graph2/search"
 )
 
 // minimal node type with no adjacency representation.
 type djNode0 struct{}
 
-func (n *djNode0) VisitAdjHalfs(graph.AdjHalfVisitor) {
+func (n *djNode0) VisitAdjHalfs(graph2.AdjHalfVisitor) {
 }
 
 func TestDijkstraDirected(t *testing.T) {
@@ -42,9 +42,9 @@ type stArc struct {
 	to     *stNode
 }
 
-func (n *stNode) VisitAdjHalfs(v graph.AdjHalfVisitor) {
+func (n *stNode) VisitAdjHalfs(v graph2.AdjHalfVisitor) {
 	for _, a := range n.nbs {
-		v(graph.Half{a, a.to})
+		v(graph2.Half{a, a.to})
 	}
 }
 

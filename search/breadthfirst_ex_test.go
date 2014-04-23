@@ -3,16 +3,16 @@ package search_test
 import (
 	"fmt"
 
-	"github.com/soniakeys/graph"
-	"github.com/soniakeys/graph/search"
+	"github.com/soniakeys/graph2"
+	"github.com/soniakeys/graph2/search"
 )
 
 type bfsNode struct {
 	num int
-	nbs []graph.Node
+	nbs []graph2.Node
 }
 
-func (n bfsNode) VisitAdjNodes(v graph.AdjNodeVisitor) bool {
+func (n bfsNode) VisitAdjNodes(v graph2.AdjNodeVisitor) bool {
 	for _, nb := range n.nbs {
 		if !v(nb) {
 			return false
@@ -31,11 +31,11 @@ func ExampleBreadthFirst1() {
 	n7 := &bfsNode{num: 7}
 	n8 := &bfsNode{num: 8}
 	n9 := &bfsNode{num: 9}
-	n5.nbs = []graph.Node{n6, n7, n9}
-	n6.nbs = []graph.Node{n7}
-	n7.nbs = []graph.Node{n5, n7, n8}
+	n5.nbs = []graph2.Node{n6, n7, n9}
+	n6.nbs = []graph2.Node{n7}
+	n7.nbs = []graph2.Node{n5, n7, n8}
 	fmt.Println("Node  Level")
-	v := func(n graph.Node, level int) bool {
+	v := func(n graph2.Node, level int) bool {
 		num := n.(*bfsNode).num
 		if num == 8 {
 			return false

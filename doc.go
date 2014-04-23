@@ -1,7 +1,7 @@
 // Copyright 2014 Sonia Keys
 // License MIT: http://opensource.org/licenses/MIT
 
-// Graph defines interfaces and other types useful for graph algorithms.
+// Graph2 defines interfaces and other types useful for graph algorithms.
 //
 // Subdirectory search contains graph search functions.  Implemented search
 // algorithms are Dijkstra’s shortest path, A*, and algorithm A.  Functions
@@ -13,4 +13,4 @@
 // are generalized to be useful for other applications.
 //
 // Neither search nor adj depend on the other; they only depend on graph.
-package graph
+package graph2

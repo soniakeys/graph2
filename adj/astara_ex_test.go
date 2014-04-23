@@ -6,13 +6,13 @@ package adj_test
 import (
 	"fmt"
 
-	"github.com/soniakeys/graph"
-	"github.com/soniakeys/graph/adj"
-	"github.com/soniakeys/graph/search"
+	"github.com/soniakeys/graph2"
+	"github.com/soniakeys/graph2/adj"
+	"github.com/soniakeys/graph2/search"
 )
 
 // Adj types satisfy the interfaces required by AStarA.  The only additional
-// requirement is a node data type that implements graph.Estimator.
+// requirement is a node data type that implements graph2.Estimator.
 
 // aaData represents node data.
 type aaData struct {
@@ -20,8 +20,8 @@ type aaData struct {
 	h    float64 // heuristic distance estimate to end node
 }
 
-// Implement graph.Estimator as required.
-func (n *aaData) Estimate(graph.EstimateNode) float64 { return n.h }
+// Implement graph2.Estimator as required.
+func (n *aaData) Estimate(graph2.EstimateNode) float64 { return n.h }
 
 // Implement fmt.String for nice output.
 func (n *aaData) String() string { return n.name }

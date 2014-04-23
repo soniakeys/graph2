@@ -7,26 +7,26 @@ import (
 	"container/heap"
 	"math"
 
-	"github.com/soniakeys/graph"
+	"github.com/soniakeys/graph2"
 )
 
 // DijkstraShortestPath finds a shortest path between two nodes.
 //
 // It finds a shortest path between two nodes in a general directed or
-// undirected graph.  The path length minimized is the sum of edge weights.
+// undirected graph2.  The path length minimized is the sum of edge weights.
 //
-// Arguments start and end must implement graph.AdjNode.  Edges connecting
-// nodes must implement graph.Weighted.  Weights must be non-negative and
+// Arguments start and end must implement graph2.AdjNode.  Edges connecting
+// nodes must implement graph2.Weighted.  Weights must be non-negative and
 // must not be an Inf or NaN.
 //
-// The found shortest path is returned as a graph.Half slice.  The first
+// The found shortest path is returned as a graph2.Half slice.  The first
 // element of this slice will be the start node.  (The edge member will be nil,
 // as there is no edge that needs to be identified going to the start node.)
 // Remaining elements give the found path of edges and nodes.
 // Also returned is the total path length.  If the end node cannot be reached
 // from the start node, the returned Half list will be nil and the path
 // length +Inf.
-func DijkstraShortestPath(start, end graph.HalfNode) ([]graph.Half, float64) {
+func DijkstraShortestPath(start, end graph2.HalfNode) ([]graph2.Half, float64) {
 	_, path, dist := djk(start, end, false)
 	return path, dist
 }
@@ -35,16 +35,16 @@ func DijkstraShortestPath(start, end graph.HalfNode) ([]graph.Half, float64) {
 // nodes in a graph, where path length is the sum of edge weights.
 //
 // Adjacency relationships between nodes can represent a general directed or
-// undirected graph.
+// undirected graph2.
 //
-// Edges connecting nodes must implement graph.Weighted.
+// Edges connecting nodes must implement graph2.Weighted.
 // Weights must be non-negative and must not be an Inf or NaN.
 //
 // The result map has a key for each node reachable from the start node.
 // The element value of each key is a half edge representing the previous
 // node along the shortest path.  The start node is included in the result,
 // with a zero value element.
-func DijkstraAllPaths(start graph.HalfNode) map[graph.HalfNode]graph.FromHalf {
+func DijkstraAllPaths(start graph2.HalfNode) map[graph2.HalfNode]graph2.FromHalf {
 	tree, _, _ := djk(start, nil, true)
 	return tree
 }
@@ -72,7 +72,7 @@ type tentPath struct {
 	dist float64 // tentative path distance
 	n    int     // number of nodes in path
 	rx   int     // heap.Remove index
-	nd   graph.HalfNode
+	nd   graph2.HalfNode
 }
 
 type tentHeap struct {
@@ -103,14 +103,14 @@ func (h *tentHeap) Pop() interface{} {
 	return tx
 }
 
-func djk(start, end graph.HalfNode, all bool) (map[graph.HalfNode]graph.FromHalf, []graph.Half, float64) {
+func djk(start, end graph2.HalfNode, all bool) (map[graph2.HalfNode]graph2.FromHalf, []graph2.Half, float64) {
 	if start == nil {
 		return nil, nil, math.Inf(1)
 	}
 	current := start
 	cd := dijkstra{tx: -1} // mark start done.  it skips the heap.
-	d := map[graph.HalfNode]dijkstra{start: cd}
-	prev := map[graph.HalfNode]graph.FromHalf{start: graph.FromHalf{}}
+	d := map[graph2.HalfNode]dijkstra{start: cd}
+	prev := map[graph2.HalfNode]graph2.FromHalf{start: graph2.FromHalf{}}
 	ct := tentPath{n: 1} // path length 1 for start node
 	h := &tentHeap{
 		pool: make([]tentPath, 1)} // zero element unused
@@ -119,7 +119,7 @@ func djk(start, end graph.HalfNode, all bool) (map[graph.HalfNode]graph.FromHalf
 			distance := ct.dist
 			// recover path by tracing prev links
 			i := ct.n
-			path := make([]graph.Half, i)
+			path := make([]graph2.Half, i)
 			for i > 0 {
 				i--
 				from := prev[current]
@@ -129,12 +129,12 @@ func djk(start, end graph.HalfNode, all bool) (map[graph.HalfNode]graph.FromHalf
 			}
 			return nil, path, distance // success
 		}
-		current.VisitAdjHalfs(func(a graph.Half) {
+		current.VisitAdjHalfs(func(a graph2.Half) {
 			nd := d[a.To]
 			if nd.tx < 0 {
 				return // skip nodes already done
 			}
-			dist := ct.dist + a.Ed.(graph.Weighted).Weight()
+			dist := ct.dist + a.Ed.(graph2.Weighted).Weight()
 			if nd.tx > 0 { // node already in tentative set
 				nt := &h.pool[nd.tx]
 				if dist >= nt.dist {
@@ -144,7 +144,7 @@ func djk(start, end graph.HalfNode, all bool) (map[graph.HalfNode]graph.FromHalf
 				// other path to this node.  record new path data and reheap.
 				nt.dist = dist
 				nt.n = ct.n + 1
-				prev[a.To] = graph.FromHalf{current, a.Ed}
+				prev[a.To] = graph2.FromHalf{current, a.Ed}
 				d[a.To] = nd
 				heap.Fix(h, nt.rx)
 			} else { // nd.tx was zero. this is the first visit to this node.
@@ -166,7 +166,7 @@ func djk(start, end graph.HalfNode, all bool) (map[graph.HalfNode]graph.FromHalf
 						n:    ct.n + 1}
 				}
 				// push path data to heap
-				prev[a.To] = graph.FromHalf{current, a.Ed}
+				prev[a.To] = graph2.FromHalf{current, a.Ed}
 				d[a.To] = nd
 				heap.Push(h, nd.tx)
 			}
