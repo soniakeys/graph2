@@ -1,7 +1,8 @@
 // Copyright 2014 Sonia Keys
 // License MIT: http://opensource.org/licenses/MIT
 
-// Graph2 defines interfaces and other types useful for graph algorithms.
+// . Graph2 defines interfaces and other types useful for graph algorithms.
+// This package was exploratory and is no longer under development.
 //
 // Subdirectory search contains graph search functions.  Implemented search
 // algorithms are Dijkstra’s shortest path, A*, and algorithm A.  Functions
